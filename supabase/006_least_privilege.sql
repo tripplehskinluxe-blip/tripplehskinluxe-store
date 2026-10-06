@@ -110,3 +110,13 @@ begin
     execute format('revoke execute on function %s from service_role', r.sig);
   end loop;
 end $$;
+
+-- ---------- 5) the server's own role (service_role) ----------
+-- Supabase projects created from April 2026 can be set up so that NEW tables are granted to nobody automatically.
+-- The website's server and the Railway listener use service_role, so grant it what it needs explicitly instead of relying on a default.
+-- (service_role is the trusted server-only key. It is never in the browser, and it ignores row rules by design.)
+grant usage on schema public to anon, authenticated, service_role;
+grant select, insert, update, delete on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
+alter default privileges in schema public grant select, insert, update, delete on tables to service_role;
+alter default privileges in schema public grant usage, select on sequences to service_role;
