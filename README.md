@@ -19,7 +19,7 @@ Open http://localhost:3000. With no keys the shop runs in **demo mode** on the b
 When Supabase exists, you add its keys to `.env.local` and restart (steps below). The shop then switches from demo mode to the real database by itself.
 
 ## Go live
-1. Create a Supabase project. In **SQL Editor**, run these in order: `supabase/schema.sql`, `002_content_and_ratings.sql`, `003_admin_security.sql`, `004_storage.sql`, `005_hardening_pages_email.sql`, **`006_least_privilege.sql`**, **`007_settings_and_login_guard.sql`**. Run them one at a time, in this order, each exactly once.
+1. Create a Supabase project. In **SQL Editor**, run these in order: `supabase/schema.sql`, `002_content_and_ratings.sql`, `003_admin_security.sql`, `004_storage.sql`, `005_hardening_pages_email.sql`, `006_least_privilege.sql`, `007_settings_and_login_guard.sql`, **`008_team_management.sql`**. Run them one at a time, in this order, each exactly once. Never run anything inside `supabase/tests/`.
 2. In Supabase → Authentication, **turn off "Allow new users to sign up"** (team accounts are created by hand; customer accounts come later).
 3. Copy `.env.example` to `.env.local` and fill it in. Use Paystack **test** keys first. Generate the secret admin address with the command in the file.
 4. Create your login (Supabase → Authentication → Users → Add user), then make it the owner:
@@ -48,6 +48,9 @@ Sign in to the team area as an admin → **Settings**. Everything below is store
 | About page | story, sections, trust badges |
 | CEO page | name, title, portrait (upload), quote, story, social links |
 | Login security | how many wrong passwords lock an account, and for how long |
+| Team (separate menu item) | add a staff member, reset their password or authenticator, remove them |
+
+**Team (staff accounts).** Admin → **Team**. Add a staff member with their email and a password (the Generate button makes a strong one), then give them the team address, their email and the password. On first sign-in they scan a QR code with an authenticator app on their own phone. From the same screen you can reset a staff member's password or authenticator, or remove them. This screen can only ever create **staff**: it cannot make anyone an admin, and it cannot change, reset or remove an admin. Admins are added and changed only in the Supabase dashboard. The rules are enforced inside the database (`008_team_management.sql`), not only on the screen.
 
 Answers and texts can contain tokens such as `{{otherFee}}`, `{{freeThreshold}}`, `{{returnDays}}`, `{{email}}`: they are replaced with the current saved values, so a price typed in the FAQ can never go out of date. The delivery fee is shown to the customer and charged from the same saved setting, and checkout refuses to charge an amount different from the one the customer was shown.
 
@@ -58,7 +61,7 @@ Privacy, Terms and Returns text: team area → **Legal pages** (the built-in dra
 Product photos: upload them in the team area (Edit product). The database stores each photo's **web address (URL)**, and the file itself sits in Supabase Storage. A CSV import may only point at photos hosted on your Supabase project or Cloudinary; any other website is removed and reported, because the browser would refuse to show it.
 
 ## Tests and checks
-- `npm test` runs 74 unit tests: prices, discounts, Paystack signature, the payment listener (forged/tampered/oversized requests, retries, once-only emails), email templates, the sign-in lockout logic, the settings rules (every field's limits, bad data, tokens), CSV import and image rules, catalogue filtering, admin address rules and the legal-page renderer.
+- `npm test` runs 87 unit tests: prices, discounts, Paystack signature, the payment listener (forged/tampered/oversized requests, retries, once-only emails), email templates, the sign-in lockout logic, the settings rules (every field's limits, bad data, tokens), CSV import and image rules, catalogue filtering, admin address rules and the legal-page renderer, and the team-management rules (a browser can never choose a role; failures roll back).
 - `supabase/tests/` holds database tests (attacks as anonymous / customer / staff without two-factor / admin, the payment flow, the exact permission list of every role, the 15 → 30 → 60 minute lockout with a simulated clock, and settings saving). Run them with `supabase/tests/run.sh` on any plain PostgreSQL 16 (not your Supabase project; the script header explains how). `00_supabase_stub.sql` imitates Supabase's login functions. They all passed on PostgreSQL 16, and each test was shown to fail when its rule was deliberately broken.
 
 ## Known items

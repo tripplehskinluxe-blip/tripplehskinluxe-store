@@ -8,7 +8,4 @@ create function auth.jwt() returns jsonb language sql stable as $$
 create table storage.buckets (id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
 create table storage.objects (id uuid default gen_random_uuid(), bucket_id text, name text);
 alter table storage.objects enable row level security;
-alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
-alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
 grant all on all tables in schema storage to anon, authenticated, service_role;

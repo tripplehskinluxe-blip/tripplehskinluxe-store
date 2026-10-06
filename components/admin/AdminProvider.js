@@ -12,7 +12,7 @@ export const useAdmin = () => useContext(Ctx);
 export const ADMIN_BASE = '/' + (process.env.NEXT_PUBLIC_ADMIN_PATH || '').replace(/^\/+|\/+$/g, '');
 const IDLE_MS = 30 * 60 * 1000; // sign out after 30 minutes of no activity
 // 4th value = admin-only (staff don't see it; the database enforces this too)
-const NAV = [['', 'Dashboard', 'grid'], ['/orders', 'Orders', 'box'], ['/pos', 'In-store sales', 'bag'], ['/products', 'Products', 'tag', true], ['/inventory', 'Inventory', 'box'], ['/customers', 'Customers', 'users'], ['/discounts', 'Discounts', 'tag', true], ['/reviews', 'Reviews', 'star', true], ['/settings', 'Settings', 'grid', true], ['/pages', 'Legal pages', 'shield', true], ['/analytics', 'Analytics', 'chart', true]];
+const NAV = [['', 'Dashboard', 'grid'], ['/orders', 'Orders', 'box'], ['/pos', 'In-store sales', 'bag'], ['/products', 'Products', 'tag', true], ['/inventory', 'Inventory', 'box'], ['/customers', 'Customers', 'users'], ['/discounts', 'Discounts', 'tag', true], ['/reviews', 'Reviews', 'star', true], ['/team', 'Team', 'users', true], ['/settings', 'Settings', 'grid', true], ['/pages', 'Legal pages', 'shield', true], ['/analytics', 'Analytics', 'chart', true]];
 
 const Center = ({ children }) => (
   <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f8f5fc', padding: 20 }}>

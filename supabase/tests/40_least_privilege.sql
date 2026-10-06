@@ -46,9 +46,9 @@ select pg_temp.expect('signed-in users cannot write orders, order_items, custome
      and privilege_type in ('INSERT','UPDATE','DELETE')), '0');
 select pg_temp.expect('profiles ROLE column cannot be updated by any signed-in user', has_column_privilege('authenticated','public.profiles','role','update')::text, 'false');
 select pg_temp.expect('profiles full_name can be updated', has_column_privilege('authenticated','public.profiles','full_name','update')::text, 'true');
-select pg_temp.expect('signed-in users can run ONLY the 9 intended functions',
+select pg_temp.expect('signed-in users can run ONLY the 12 intended functions',
   (select string_agg(p.proname, ',' order by p.proname) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and has_function_privilege('authenticated', p.oid, 'execute')),
-  'adjust_stock,get_security_config,is_admin,is_staff,record_pos_sale,save_security_config,save_setting,set_order_status,set_stock_count');
+  'adjust_stock,get_security_config,is_admin,is_staff,record_pos_sale,save_security_config,save_setting,set_order_status,set_stock_count,team_check_target,team_list,team_set_role');
 select pg_temp.as_('00000000-0000-0000-0000-0000000000c1','aal1');
 set role authenticated;
 select pg_temp.denied('customer cannot insert an order (privilege, not just policy)', $q$insert into public.orders(order_number,channel,payment_method,subtotal_ngn,total_ngn) values ('X','online','paystack',1,1)$q$);
@@ -84,9 +84,10 @@ select pg_temp.expect('admin WITHOUT two-factor cannot edit products', (select p
 
 
 \echo --- the server's own role must KEEP what it needs (otherwise the shop would stop working)
-select pg_temp.expect('service_role can read/write the tables the server uses',
-  (select bool_and(has_table_privilege('service_role', 'public.' || t, 'select') and has_table_privilege('service_role', 'public.' || t, 'insert') and has_table_privilege('service_role', 'public.' || t, 'update'))::text
-     from unnest(array['orders','order_items','customers','products','settings','discounts','contact_messages','newsletter_subscribers','profiles']) t), 'true');
+select pg_temp.expect('service_role can read/write EVERY table (the server uses these directly)',
+  (select bool_and(has_table_privilege('service_role', c.oid, 'select') and has_table_privilege('service_role', c.oid, 'insert') and has_table_privilege('service_role', c.oid, 'update') and has_table_privilege('service_role', c.oid, 'delete'))::text
+     from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r'), 'true');
+select pg_temp.expect('service_role can use the public schema', has_schema_privilege('service_role', 'public', 'usage')::text, 'true');
 select pg_temp.expect('service_role can run the payment and email functions',
   (select bool_and(has_function_privilege('service_role', p.oid, 'execute'))::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'public' and p.proname in ('create_online_order','mark_order_paid','claim_confirmation_email','release_confirmation_email','claim_status_email','release_status_email')), 'true');
