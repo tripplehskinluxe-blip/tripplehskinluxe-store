@@ -73,4 +73,4 @@ Product photos: upload them in the team area (Edit product). The database stores
 ## Not verified here
 - Live Paystack payments and a real Supabase project's sign-in / two-factor were not exercised (no keys). Test the whole flow with Paystack **test** keys before real money: success, failed card, abandoned payment, duplicate webhook, sold-out item, cancel-then-pay.
 - Resend delivery was tested with a simulated Resend, not a real send.
-- The Railway service was run locally as a plain Node process; deploy and send a Paystack test event to confirm it end to end.
+- The Railway service was run locally as a plain Node process; deploy and send a Paystack test event to confirm it end to end .
