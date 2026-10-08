@@ -8,7 +8,7 @@ import { naira, fmtDate } from '@/lib/format.js';
 
 export default function OrderDetail() {
   const { id } = useParams();
-  const { sb, base, toast, token } = useAdmin();
+  const { sb, base, toast, token, role } = useAdmin();
   const [o, setO] = useState(null);
   const [items, setItems] = useState([]);
   const [missing, setMissing] = useState(false);
@@ -36,6 +36,14 @@ export default function OrderDetail() {
     }
   }
 
+  async function markRefunded() {
+    const note = window.prompt('Paystack refund reference or a short note (optional):', '');
+    if (note === null) return;
+    const { error } = await sb.rpc('mark_order_refunded', { p_order: id, p_note: note.trim().slice(0, 200) });
+    if (error) { toast('Could not mark as refunded. Check you are signed in as the owner.'); return; }
+    toast('Marked as refunded'); load();
+  }
+
   if (missing) return <><PageHead title="Order not found"><Link className="btn ghost s" href={`${base}/orders`}>Back</Link></PageHead></>;
   if (!o) return <p className="mut">Loading…</p>;
   const a = o.address || {};
@@ -44,7 +52,13 @@ export default function OrderDetail() {
   return (
     <>
       <PageHead title={o.order_number} sub={`${fmtDate(o.created_at)} · `}><Link className="btn ghost s" href={`${base}/orders`}>Back</Link></PageHead>
-      {o.needs_attention && <div className="alert">This order needs attention: payment was received but an item sold out, or the amount did not match. Check Paystack and contact the customer.</div>}
+      {o.status === 'cancelled' && o.payment_status === 'paid' && (
+        <div className="alert" style={{ display: 'block' }}>
+          <b>Refund due.</b> This order was cancelled after the customer paid {naira(o.total_ngn)}. Refund them in your Paystack dashboard (or hand back the cash for an in-store sale), then record it here.
+          <div style={{ marginTop: 10 }}>{role === 'admin' ? <button className="btn s" onClick={markRefunded}>Mark as refunded</button> : <span className="sm">Ask the shop owner to refund this and mark it as refunded.</span>}</div>
+        </div>
+      )}
+      {o.needs_attention && !(o.status === 'cancelled' && o.payment_status === 'paid') && <div className="alert">This order needs attention: payment was received but an item sold out, the amount did not match, or a promo code went over its limit. Check Paystack and contact the customer.</div>}
       <div className="gr2">
         <div>
           <div className="pnl"><h3>Items</h3>
@@ -58,7 +72,7 @@ export default function OrderDetail() {
           </div>
         </div>
         <div className="pnl"><h3>Status</h3>
-          <p style={{ marginBottom: 12 }}><ChannelPill c={o.channel} /> <Pill text={o.payment_status === 'paid' ? 'Paid' : o.payment_status === 'failed' ? 'Failed' : 'Unpaid'} /></p>
+          <p style={{ marginBottom: 12 }}><ChannelPill c={o.channel} /> <Pill text={o.payment_status === 'paid' ? 'Paid' : o.payment_status === 'refunded' ? 'Refunded' : o.payment_status === 'failed' ? 'Failed' : 'Unpaid'} /></p>
           <div className="fld"><label className="f">Order status</label>
             <select className="sel" value={o.status} onChange={(e) => setStatus(e.target.value)} disabled={o.status === 'cancelled'}>{STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
           <p className="sm mut">Payment method: <b>{o.payment_method.replace(/_/g, ' ')}</b>{o.paid_at && <> · paid {fmtDate(o.paid_at)}</>}</p>

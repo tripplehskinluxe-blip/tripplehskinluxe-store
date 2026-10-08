@@ -21,6 +21,7 @@ export const DEFAULT_SETTINGS = {
     lagosDays: '1–3 working days',
     otherDays: '3–7 working days',
     returnDays: 7,
+    abandonAfterHours: 72,
     processingNote: 'Orders placed before 2pm on working days are processed the same day.',
   },
   ceo: {

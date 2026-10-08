@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin.js';
 import { rateLimit, getIp } from '@/lib/ratelimit.js';
 import { settlePayment, isOurReference } from '@/lib/settlement.js';
+import { dbConfigured } from '@/lib/config.js';
 
 export const runtime = 'nodejs';
 
@@ -14,7 +15,7 @@ const read = (db, ref) => db.from('orders').select('order_number,payment_status,
 export async function GET(req) {
   if (!rateLimit(`status:${getIp(req)}`, 60, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   const ref = new URL(req.url).searchParams.get('reference') || '';
-  if (!isOurReference(ref)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (!isOurReference(ref) || !dbConfigured()) return NextResponse.json({ error: 'Not found' }, { status: 404 });     // demo mode has no orders to look up
 
   const db = supabaseAdmin();
   let { data } = await read(db, ref);

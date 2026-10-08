@@ -13,7 +13,7 @@ export default function Orders() {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [f, setF] = useState({ q: '', status: '', channel: '', attention: false });
+  const [f, setF] = useState({ q: '', status: '', channel: '', payment: '', attention: false });
   const [loading, setLoading] = useState(true);
 
   const query = useCallback((from, to) => {
@@ -22,6 +22,7 @@ export default function Orders() {
     if (s) qb = qb.or(`order_number.ilike.%${s}%,customer_name.ilike.%${s}%,customer_phone.ilike.%${s}%`);
     if (f.status) qb = qb.eq('status', f.status);
     if (f.channel) qb = qb.eq('channel', f.channel);
+    if (f.payment) qb = qb.eq('payment_status', f.payment);
     if (f.attention) qb = qb.eq('needs_attention', true);
     return qb.range(from, to);
   }, [sb, f]);
@@ -51,6 +52,7 @@ export default function Orders() {
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
           <form onSubmit={(e) => { e.preventDefault(); set('q', new FormData(e.currentTarget).get('q')); }} style={{ flex: '1 1 220px' }}><input className="inp" name="q" placeholder="Search order number, name or phone…" defaultValue={f.q} /></form>
           <select className="sel" style={{ maxWidth: 190 }} value={f.channel} onChange={(e) => set('channel', e.target.value)}><option value="">All channels</option><option value="online">Online</option><option value="store">In-store</option></select>
+          <select className="sel" style={{ maxWidth: 190 }} value={f.payment} onChange={(e) => set('payment', e.target.value)}><option value="">All payments</option><option value="paid">Paid</option><option value="unpaid">Unpaid</option><option value="failed">Failed</option><option value="refunded">Refunded</option></select>
           <select className="sel" style={{ maxWidth: 190 }} value={f.status} onChange={(e) => set('status', e.target.value)}><option value="">All statuses</option>{STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
           <label className="tog" style={{ border: 0, padding: 0, gap: 8 }}><input type="checkbox" checked={f.attention} onChange={(e) => set('attention', e.target.checked)} /> Needs attention</label>
         </div>
@@ -58,7 +60,7 @@ export default function Orders() {
           {rows.map((o) => (
             <tr key={o.id} className={o.needs_attention ? 'lowr' : ''}>
               <td><Link className="lnk" href={`${base}/orders/${o.id}`}>{o.order_number}</Link></td><td><ChannelPill c={o.channel} /></td><td>{o.customer_name}</td><td>{fmtDate(o.created_at)}</td><td>{naira(o.total_ngn)}</td>
-              <td><Pill text={o.payment_status === 'paid' ? 'Paid' : o.payment_status === 'failed' ? 'Failed' : 'Unpaid'} /></td><td><Pill text={statusLabel(o.status)} /></td>
+              <td><Pill text={o.payment_status === 'paid' ? 'Paid' : o.payment_status === 'refunded' ? 'Refunded' : o.payment_status === 'failed' ? 'Failed' : 'Unpaid'} /></td><td><Pill text={statusLabel(o.status)} />{o.status === 'cancelled' && o.payment_status === 'paid' && <> <Pill text="Refund due" /></>}</td>
             </tr>
           ))}
           {!rows.length && <tr><td colSpan={7} className="mut">{loading ? 'Loading…' : 'No orders found.'}</td></tr>}

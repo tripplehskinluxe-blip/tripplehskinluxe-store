@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin.js';
 import { calcTotals } from '@/lib/pricing.js';
 import { loadSettings } from '@/lib/settings-core.js';
+import { discountUsable } from '@/lib/pricing.js';
 import { initializeTransaction } from '@/lib/paystack.js';
 import { rateLimit, getIp } from '@/lib/ratelimit.js';
 import { paymentsConfigured } from '@/lib/config.js';
@@ -56,9 +57,13 @@ export async function POST(req) {
   let discount = null;
   const code = clean(b.discount_code, 30).toUpperCase();
   if (code) {
-    const { data } = await db.from('discounts').select('code,type,value,min_order_ngn,active').eq('code', code).maybeSingle();
+    const { data } = await db.from('discounts').select('code,type,value,min_order_ngn,active,uses,max_uses,expires_at').eq('code', code).maybeSingle();
     discount = data || null;
+    if (!discountUsable(discount))      // expired, used up or switched off since the customer applied it
+      return json({ code: 'PROMO_INVALID', error: 'That promo code is no longer available. The page will refresh so you can review your total.' }, 409);
   }
+  // Tidy-up: cancel checkouts that were never paid (best effort; never blocks a customer).
+  try { await db.rpc('cancel_abandoned_orders'); } catch { /* ignore */ }
   // Fresh from the database every time (never the cached copy the pages use): this is the number the customer is charged.
   let delivery;
   try { delivery = (await loadSettings(db)).delivery; } catch (e) { console.error('settings lookup', e?.message); return json({ error: 'Something went wrong' }, 500); }   // fail closed: never charge with guessed fees

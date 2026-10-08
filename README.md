@@ -19,7 +19,7 @@ Open http://localhost:3000. With no keys the shop runs in **demo mode** on the b
 When Supabase exists, you add its keys to `.env.local` and restart (steps below). The shop then switches from demo mode to the real database by itself.
 
 ## Go live
-1. Create a Supabase project. In **SQL Editor**, run these in order: `supabase/schema.sql`, `002_content_and_ratings.sql`, `003_admin_security.sql`, `004_storage.sql`, `005_hardening_pages_email.sql`, `006_least_privilege.sql`, `007_settings_and_login_guard.sql`, **`008_team_management.sql`**. Run them one at a time, in this order, each exactly once. Never run anything inside `supabase/tests/`.
+1. Create a Supabase project. In **SQL Editor**, run these in order: `supabase/schema.sql`, `002_content_and_ratings.sql`, `003_admin_security.sql`, `004_storage.sql`, `005_hardening_pages_email.sql`, `006_least_privilege.sql`, `007_settings_and_login_guard.sql`, `008_team_management.sql`, **`009_refunds_promos_abandoned.sql`**. Run them one at a time, in this order, each exactly once. Never run anything inside `supabase/tests/`.
 2. In Supabase → Authentication, **turn off "Allow new users to sign up"** (team accounts are created by hand; customer accounts come later).
 3. Copy `.env.example` to `.env.local` and fill it in. Use Paystack **test** keys first. Generate the secret admin address with the command in the file.
 4. Create your login (Supabase → Authentication → Users → Add user), then make it the owner:
@@ -50,6 +50,14 @@ Sign in to the team area as an admin → **Settings**. Everything below is store
 | Login security | how many wrong passwords lock an account, and for how long |
 | Team (separate menu item) | add a staff member, reset their password or authenticator, remove them |
 
+**Promo codes.** Admin → Discounts. Every code can have a **total number of uses** and an **expiry date** (a new code starts at 50 uses and 30 Dec 2026: change or empty the boxes for unlimited / no expiry; **Limits** edits an existing code). A promo ends at the end of the chosen day, Lagos time. Expired, used-up, switched-off and unknown codes all show the same "invalid" message. If two people take the last use at the same moment, both orders go through (the customer already paid) and the order is flagged "needs attention".
+
+**Refunds.** Cancelling a PAID order puts the stock back, keeps the payment recorded as paid, and flags the order **"Refund due"**. Refund the customer in the Paystack dashboard (or give the cash back for an in-store sale), then the owner opens the order and presses **Mark as refunded** (admin with two-factor only; the note, such as the Paystack refund reference, goes in the audit log). The shop does not move money by itself.
+
+**Unpaid orders.** A customer who starts checkout but never pays has the order cancelled automatically after the hours set in Settings → Delivery & returns (default 72). The order is kept, marked Cancelled, and no stock is touched. If that customer pays later anyway, the payment is kept and the order is flagged for you. The cleanup runs once a day (Vercel Cron, see `vercel.json`) and whenever someone starts a checkout. **Set up:** in Vercel add an environment variable `CRON_SECRET` with a long random value (`openssl rand -hex 16`) and redeploy. Without it the daily job refuses to run (the checkout-time cleanup still works).
+
+**CSV import.** Re-importing never deletes photos: a row with no photo links leaves that product's current photos untouched, and a row with links replaces them. It never re-activates an archived product. Photos must be hosted on your Supabase project or Cloudinary. Excel: save as **"CSV UTF-8"**; plain "CSV (Comma delimited)" can corrupt the ₦ sign.
+
 **Team (staff accounts).** Admin → **Team**. Add a staff member with their email and a password (the Generate button makes a strong one), then give them the team address, their email and the password. On first sign-in they scan a QR code with an authenticator app on their own phone. From the same screen you can reset a staff member's password or authenticator, or remove them. This screen can only ever create **staff**: it cannot make anyone an admin, and it cannot change, reset or remove an admin. Admins are added and changed only in the Supabase dashboard. The rules are enforced inside the database (`008_team_management.sql`), not only on the screen.
 
 Answers and texts can contain tokens such as `{{otherFee}}`, `{{freeThreshold}}`, `{{returnDays}}`, `{{email}}`: they are replaced with the current saved values, so a price typed in the FAQ can never go out of date. The delivery fee is shown to the customer and charged from the same saved setting, and checkout refuses to charge an amount different from the one the customer was shown.
@@ -61,7 +69,7 @@ Privacy, Terms and Returns text: team area → **Legal pages** (the built-in dra
 Product photos: upload them in the team area (Edit product). The database stores each photo's **web address (URL)**, and the file itself sits in Supabase Storage. A CSV import may only point at photos hosted on your Supabase project or Cloudinary; any other website is removed and reported, because the browser would refuse to show it.
 
 ## Tests and checks
-- `npm test` runs 87 unit tests: prices, discounts, Paystack signature, the payment listener (forged/tampered/oversized requests, retries, once-only emails), email templates, the sign-in lockout logic, the settings rules (every field's limits, bad data, tokens), CSV import and image rules, catalogue filtering, admin address rules and the legal-page renderer, and the team-management rules (a browser can never choose a role; failures roll back).
+- `npm test` runs 98 unit tests: prices, discounts, Paystack signature, the payment listener (forged/tampered/oversized requests, retries, once-only emails), email templates, the sign-in lockout logic, the settings rules (every field's limits, bad data, tokens), CSV import and image rules, catalogue filtering, admin address rules and the legal-page renderer, the team-management rules (a browser can never choose a role; failures roll back), promo limits and CSV photo protection.
 - `supabase/tests/` holds database tests (attacks as anonymous / customer / staff without two-factor / admin, the payment flow, the exact permission list of every role, the 15 → 30 → 60 minute lockout with a simulated clock, and settings saving). Run them with `supabase/tests/run.sh` on any plain PostgreSQL 16 (not your Supabase project; the script header explains how). `00_supabase_stub.sql` imitates Supabase's login functions. They all passed on PostgreSQL 16, and each test was shown to fail when its rule was deliberately broken.
 
 ## Known items
@@ -73,4 +81,4 @@ Product photos: upload them in the team area (Edit product). The database stores
 ## Not verified here
 - Live Paystack payments and a real Supabase project's sign-in / two-factor were not exercised (no keys). Test the whole flow with Paystack **test** keys before real money: success, failed card, abandoned payment, duplicate webhook, sold-out item, cancel-then-pay.
 - Resend delivery was tested with a simulated Resend, not a real send.
-- The Railway service was run locally as a plain Node process; deploy and send a Paystack test event to confirm it end to end .
+- The Railway service was run locally as a plain Node process; deploy and send a Paystack test event to confirm it end to end.

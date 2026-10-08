@@ -63,7 +63,7 @@ export default function Checkout() {
         sessionStorage.setItem('ths_demo_order', JSON.stringify(order));
         clear(); router.push('/order/confirmation?demo=1'); return;
       }
-      if (r.status === 409 && data.code === 'PRICE_CHANGED') { toast(data.error); setBusy(false); setTimeout(() => window.location.reload(), 2500); return; }
+      if (r.status === 409 && (data.code === 'PRICE_CHANGED' || data.code === 'PROMO_INVALID')) { toast(data.error); setBusy(false); setTimeout(() => window.location.reload(), 2500); return; }
       if (!r.ok) { toast(data.error || 'We could not place your order'); setBusy(false); return; }
       window.location.href = data.authorization_url; // Paystack's hosted payment page. The bag is cleared once payment is confirmed.
     } catch { toast('Network error. Please try again.'); setBusy(false); }

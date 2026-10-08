@@ -4,7 +4,7 @@ import Papa from 'papaparse';
 import { supabaseAdmin } from '@/lib/supabase-admin.js';
 import { requireStaff } from '@/lib/auth.js';
 import { rateLimit } from '@/lib/ratelimit.js';
-import { validateProductRow, slugify, allowedImageHosts } from '@/lib/rows.js';
+import { validateProductRow, slugify, allowedImageHosts, splitImportBatches } from '@/lib/rows.js';
 
 export const runtime = 'nodejs';
 const MAX_ROWS = 2000;
@@ -83,7 +83,8 @@ export async function POST(req) {
   });
 
   const touched = [];
-  for (const part of chunk(payload, 200)) {
+  const { fresh, withPhotos, keepPhotos } = splitImportBatches(payload, (sku) => existing.has(sku));   // see lib/rows.js: photos and archived state are protected
+  for (const part of [...chunk(fresh, 200), ...chunk(withPhotos, 200), ...chunk(keepPhotos, 200)]) {
     const { data, error } = await db.from('products').upsert(part, { onConflict: 'sku' }).select('id,sku,stock');
     if (error) return fail(error);
     touched.push(...data);
