@@ -40,7 +40,7 @@ export default function Customers() {
         <div className="tw"><table className="t"><thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Orders</th><th>Total spent</th><th>Last order</th></tr></thead><tbody>
           {shown.slice(0, 200).map((c) => (
             <tr key={c.id} onClick={() => setSel(c)} style={{ cursor: 'pointer' }}>
-              <td><b>{c.name || '—'}</b></td><td>{c.email || '—'}</td><td>{c.phone || '—'}</td><td>{c.orders.length}</td><td>{naira(c.spent)}</td><td>{c.last ? fmtDate(c.last) : '—'}</td>
+              <td><b>{c.name || 'None'}</b></td><td>{c.email || 'None'}</td><td>{c.phone || 'None'}</td><td>{c.orders.length}</td><td>{naira(c.spent)}</td><td>{c.last ? fmtDate(c.last) : 'No orders'}</td>
             </tr>
           ))}
           {!shown.length && <tr><td colSpan={6} className="mut">{rows ? 'No customers found.' : 'Loading…'}</td></tr>}
@@ -50,7 +50,7 @@ export default function Customers() {
       {sel && (
         <Modal onClose={() => setSel(null)}>
           <h3>{sel.name || 'Customer'}</h3>
-          <dl className="kv" style={{ marginBottom: 18 }}><dt>Email</dt><dd>{sel.email || '—'}</dd><dt>Phone</dt><dd>{sel.phone || '—'}</dd><dt>Orders</dt><dd>{sel.orders.length}</dd><dt>Total spent</dt><dd><b>{naira(sel.spent)}</b></dd></dl>
+          <dl className="kv" style={{ marginBottom: 18 }}><dt>Email</dt><dd>{sel.email || 'None'}</dd><dt>Phone</dt><dd>{sel.phone || 'None'}</dd><dt>Orders</dt><dd>{sel.orders.length}</dd><dt>Total spent</dt><dd><b>{naira(sel.spent)}</b></dd></dl>
           {sel.orders.slice(0, 15).map((o) => <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', padding: '9px 0', borderBottom: '1px solid var(--line)', fontSize: 14 }}><Link className="lnk" href={`${base}/orders/${o.id}`}>{o.order_number}</Link><span className="mut">{fmtDate(o.created_at)}</span><span>{naira(o.total_ngn)}</span><Pill text={statusLabel(o.status)} /></div>)}
           {!sel.orders.length && <p className="mut">No orders yet.</p>}
           <button className="btn ghost block" style={{ marginTop: 16 }} onClick={() => setSel(null)}>Close</button>

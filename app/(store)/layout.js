@@ -10,7 +10,7 @@ export default async function StoreLayout({ children }) {
   return (
     <CartProvider>
       <Header categories={categories} />
-      <main className="page-in">{children}</main>
+      <main>{children}</main>
       <Footer />
       <BottomNav />
       <WhatsApp />

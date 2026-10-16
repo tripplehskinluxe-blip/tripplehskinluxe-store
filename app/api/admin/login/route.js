@@ -8,8 +8,8 @@ import { rateLimit, getIp } from '@/lib/ratelimit.js';
 export const runtime = 'nodejs';
 const NO_STORE = { 'Cache-Control': 'no-store' };
 
-// Team sign-in. The browser never talks to Supabase's password login directly; it sends the email + password here,
-// the server applies the lockout rules (stored in the database), and only then asks Supabase.
+// Team sign-in. The browser never talks to the database's password login directly; it sends the email + password here,
+// the server applies the lockout rules (stored in the database), and only then asks the database.
 export async function POST(req) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anon || !process.env.SUPABASE_SERVICE_ROLE_KEY) return NextResponse.json({ error: 'Not connected' }, { status: 503, headers: NO_STORE });

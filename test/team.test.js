@@ -63,7 +63,7 @@ test('team: remove of an admin / yourself / a non-staff is refused by the databa
 
 test('team: if the login cannot be deleted, access is still gone and the admin is told what to do', async () => {
   const m = mk({ del: () => ({ error: { message: 'boom' } }) }); const r = await run(m, { action: 'remove', user_id: ID });
-  assert.equal(r.status, 200); assert.match(r.body.warning, /Supabase/);
+  assert.equal(r.status, 200); assert.match(r.body.warning, /database/);
 });
 
 test('team: reset password checks the target in the database BEFORE touching the login', async () => {

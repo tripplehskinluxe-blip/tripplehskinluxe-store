@@ -10,7 +10,7 @@ export async function generateMetadata() {
   const { store } = await getSettings();
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
-    title: { default: `${store.name} — ${store.tagline}`, template: `%s · ${store.name}` },
+    title: { default: `${store.name} | ${store.tagline}`, template: `%s · ${store.name}` },
     description: 'Skincare, body care, hair care, fragrance and spa essentials, delivered across Nigeria.',
     openGraph: { title: store.name, description: store.tagline, type: 'website' },
   };

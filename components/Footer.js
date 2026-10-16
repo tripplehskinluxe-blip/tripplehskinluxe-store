@@ -1,18 +1,17 @@
 import Link from 'next/link';
 import { socialLabel } from '@/lib/settings-core.js';
 import { getSettings } from '@/lib/settings.js';
-import { logoParts } from '@/lib/format.js';
+import Logo from './Logo';
 
 export default async function Footer() {
   const { store } = await getSettings();
-  const [top, sub] = logoParts(store.name);
   const socials = Object.entries(store.social).filter(([, url]) => url);
   return (
     <footer className="ft">
       <div className="container">
         <div className="ft-g">
           <div>
-            <Link className="logo" href="/">{top}<small>{sub}</small></Link>
+            <Logo store={store} />
             <p style={{ margin: '16px 0', maxWidth: '34ch', fontSize: 14 }}>{store.tagline} Skincare, body care, hair care, fragrance and spa essentials, delivered across Nigeria.</p>
             <div style={{ display: 'flex', gap: 16, fontSize: 14, flexWrap: 'wrap' }}>
               {socials.map(([k, url]) => <a key={k} href={url} target="_blank" rel="noopener noreferrer">{socialLabel[k]}</a>)}

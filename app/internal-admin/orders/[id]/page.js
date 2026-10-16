@@ -63,10 +63,10 @@ export default function OrderDetail() {
         <div>
           <div className="pnl"><h3>Items</h3>
             {items.map((i) => <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--line)' }}><span>{i.name} <span className="mut">× {i.qty}</span></span><b>{naira(i.unit_price_ngn * i.qty)}</b></div>)}
-            <dl className="kv" style={{ marginTop: 16 }}><dt>Subtotal</dt><dd>{naira(o.subtotal_ngn)}</dd><dt>Delivery</dt><dd>{naira(o.delivery_ngn)}</dd><dt>Discount</dt><dd>{o.discount_ngn ? `-${naira(o.discount_ngn)}${o.discount_code ? ` (${o.discount_code})` : ''}` : '—'}</dd><dt><b>Total</b></dt><dd><b>{naira(o.total_ngn)}</b></dd></dl>
+            <dl className="kv" style={{ marginTop: 16 }}><dt>Subtotal</dt><dd>{naira(o.subtotal_ngn)}</dd><dt>Delivery</dt><dd>{naira(o.delivery_ngn)}</dd><dt>Discount</dt><dd>{o.discount_ngn ? `-${naira(o.discount_ngn)}${o.discount_code ? ` (${o.discount_code})` : ''}` : 'None'}</dd><dt><b>Total</b></dt><dd><b>{naira(o.total_ngn)}</b></dd></dl>
           </div>
           <div className="pnl"><h3>Customer</h3>
-            <dl className="kv"><dt>Name</dt><dd>{o.customer_name}</dd><dt>Phone</dt><dd>{o.customer_phone || '—'}</dd><dt>Email</dt><dd>{o.customer_email || '—'}</dd>
+            <dl className="kv"><dt>Name</dt><dd>{o.customer_name}</dd><dt>Phone</dt><dd>{o.customer_phone || 'None'}</dd><dt>Email</dt><dd>{o.customer_email || 'None'}</dd>
               {o.channel === 'online' && <><dt>Address</dt><dd>{[a.address, a.landmark, a.city, a.state].filter(Boolean).join(', ')}</dd>{a.notes && <><dt>Notes</dt><dd>{a.notes}</dd></>}</>}</dl>
             {wa && <a className="btn ghost s" style={{ marginTop: 14 }} href={wa} target="_blank" rel="noopener noreferrer">Message on WhatsApp</a>}
           </div>

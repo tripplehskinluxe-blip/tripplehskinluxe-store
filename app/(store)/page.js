@@ -11,6 +11,7 @@ import { naira } from '@/lib/format.js';
 
 export const revalidate = 60;
 
+const CONCERN_ICON = { acne: 'target', dry: 'drop', darkspots: 'moon', pigment: 'layers', sensitive: 'shield', glow: 'sun' };
 const CONCERN_DESC = { acne: 'Clear, calm, balanced', dry: 'Deep, lasting hydration', darkspots: 'Even out your tone', pigment: 'Brighter, smoother skin', sensitive: 'Gentle, barrier-first care', glow: 'Lit-from-within skin' };
 const ph = { id: 'ph', slug: 'ph', category: 'Skincare', subcategory: '', name: '', brand: '' };
 
@@ -18,8 +19,7 @@ export default async function Home() {
   const { store, delivery } = await getSettings();
   const [{ best, fresh }, cats] = await Promise.all([getHome(), getCategories()]);
   const [a, b, c] = [best[1] || best[0] || ph, fresh[0] || best[0] || ph, best[4] || best[0] || ph];
-  const mq = ['Authentic products', `Free Lagos delivery over ${naira(delivery.freeThreshold)}`, 'Pay securely with Paystack', `Visit us: ${store.address}`, 'Chat with us on WhatsApp'];
-  const marquee = [...mq, ...mq];
+  const strip = ['Authentic products', `Free Lagos delivery over ${naira(delivery.freeThreshold)}`, 'Secure payment with Paystack', 'Chat with us on WhatsApp'];
   const spaPick = [best, fresh].flat().filter((p) => p.category === 'Spa & Wellness');
 
   return (
@@ -38,10 +38,10 @@ export default async function Home() {
           </div>
         </div>
       </section>
-      <div className="mq" aria-hidden="true"><div>{marquee.map((t, i) => <span key={i}>{t}</span>)}</div></div>
+      <div className="strip"><div className="container">{strip.map((t) => <span key={t}>{t}</span>)}</div></div>
 
       <section className="sec"><div className="container">
-        <div className="sh"><div><h2>Shop by category</h2><p>Find what your routine is missing.</p></div></div>
+        <div className="sh"><div><h2>Shop by category</h2></div></div>
         <div className="grid g3">
           {cats.map((cat) => (
             <Link key={cat.name} className="cat" href={`/shop?cat=${encodeURIComponent(cat.name)}`}>
@@ -53,7 +53,7 @@ export default async function Home() {
       </div></section>
 
       <section className="sec alt"><div className="container">
-        <div className="sh"><div><h2>Customer favourites</h2><p>The products our customers keep coming back for.</p></div><Link className="lnk" href="/shop?flag=best">View all best sellers <Icon n="arrow" s={16} /></Link></div>
+        <div className="sh"><div><h2>Customer favourites</h2></div><Link className="lnk" href="/shop?flag=best">View all best sellers <Icon n="arrow" s={16} /></Link></div>
         <ProductGrid items={best} />
       </div></section>
 
@@ -69,15 +69,15 @@ export default async function Home() {
       </div></section>
 
       <section className="sec"><div className="container">
-        <div className="sh"><div><h2>Just in</h2><p>Fresh arrivals for your shelf.</p></div><Link className="lnk" href="/shop?flag=new">View all new arrivals <Icon n="arrow" s={16} /></Link></div>
+        <div className="sh"><div><h2>Just in</h2></div><Link className="lnk" href="/shop?flag=new">View all new arrivals <Icon n="arrow" s={16} /></Link></div>
         <ProductGrid items={fresh} cols="g3" />
       </div></section>
 
       <section className="sec alt"><div className="container">
-        <div className="sh"><div><h2>Shop by concern</h2><p>Start with what your skin is asking for.</p></div></div>
+        <div className="sh"><div><h2>Shop by concern</h2></div></div>
         <div className="grid g6">
           {Object.entries(CONCERNS).map(([k, label]) => (
-            <Link key={k} className="cn" href={`/shop?concern=${k}`}><Icon n="drop" s={22} /><div><span>{label}</span><br /><small>{CONCERN_DESC[k]}</small></div></Link>
+            <Link key={k} className="cn" href={`/shop?concern=${k}`}><Icon n={CONCERN_ICON[k] || 'drop'} s={24} /><div><span>{label}</span><br /><small>{CONCERN_DESC[k]}</small></div></Link>
           ))}
         </div>
       </div></section>

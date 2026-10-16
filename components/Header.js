@@ -6,7 +6,7 @@ import Icon from './Icon';
 import SearchOverlay from './SearchOverlay';
 import { useCart } from './CartProvider';
 import { useSettings } from './SettingsProvider';
-import { logoParts } from '@/lib/format.js';
+import Logo from './Logo';
 
 export default function Header({ categories }) {
   const { count, wish, ready } = useCart();
@@ -14,7 +14,6 @@ export default function Header({ categories }) {
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);
   const path = usePathname();
-  const [top, sub] = logoParts(store.name);
 
   useEffect(() => { setMenu(false); setSearch(false); }, [path]);
   useEffect(() => { document.body.classList.toggle('lock', menu || search); }, [menu, search]);
@@ -26,7 +25,7 @@ export default function Header({ categories }) {
       <header className="hdr">
         <div className="container hdr-in">
           <button className="ib m-only" onClick={() => setMenu(true)} aria-label="Open menu"><Icon n="menu" /></button>
-          <Link className="logo" href="/">{top}<small>{sub}</small></Link>
+          <Logo store={store} />
           <nav className="nav" aria-label="Main">
             <Link href="/shop">Shop</Link>
             <div className="dd">
@@ -52,7 +51,7 @@ export default function Header({ categories }) {
           <div className="bg" onClick={() => setMenu(false)} />
           <div className="drw">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <Link className="logo" href="/" style={{ margin: 0 }}>{top}<small>{sub}</small></Link>
+              <Logo store={store} size={40} />
               <button className="ib" onClick={() => setMenu(false)} aria-label="Close"><Icon n="x" /></button>
             </div>
             <Link href="/shop">Shop</Link>

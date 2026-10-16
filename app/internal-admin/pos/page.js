@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useAdmin } from '@/components/admin/AdminProvider';
+import { refreshShop } from '@/components/admin/refreshShop';
 import { PageHead, Modal, safeSearch } from '@/components/admin/ui';
 import Icon from '@/components/Icon';
 import { naira } from '@/lib/format.js';
@@ -9,7 +10,7 @@ import { useSettings } from '@/components/SettingsProvider';
 const METHODS = [['cash', 'Cash'], ['pos_terminal', 'POS terminal'], ['bank_transfer', 'Bank transfer']];
 
 export default function Pos() {
-  const { sb, toast } = useAdmin();
+  const { sb, toast, token } = useAdmin();
   const { store } = useSettings();
   const [q, setQ] = useState('');
   const [results, setResults] = useState([]);
@@ -43,7 +44,7 @@ export default function Pos() {
     if (error) { setBusy(false); return toast(/stock/i.test(error.message) ? 'Not enough stock for one of the items' : 'Could not record the sale'); }
     const { data: o } = await sb.from('orders').select('total_ngn').eq('order_number', num).maybeSingle();
     setReceipt({ num, total: o?.total_ngn ?? total, items, method, phone: cust.phone.trim() });
-    setItems([]); setCust({ name: '', phone: '' }); setBusy(false);
+    refreshShop(token); setItems([]); setCust({ name: '', phone: '' }); setBusy(false);
   }
   const waText = (r) => `Thank you for shopping at ${store.name}!\nReceipt ${r.num}\n${r.items.map((i) => `${i.name} x${i.qty}`).join('\n')}\nTotal: ${naira(r.total)}`;
 
@@ -80,7 +81,6 @@ export default function Pos() {
             <div className="fld"><label className="f">Phone (optional)</label><input className="inp" type="tel" value={cust.phone} maxLength={20} onChange={(e) => setCust({ ...cust, phone: e.target.value })} /></div>
           </div>
           <button className="btn block" onClick={complete} disabled={!items.length || busy}>{busy ? 'Recording…' : `Complete sale · ${naira(total)}`}</button>
-          <p className="sm mut" style={{ marginTop: 10 }}>The total is recalculated from current prices when the sale is recorded.</p>
         </div>
       </div>
       {receipt && (

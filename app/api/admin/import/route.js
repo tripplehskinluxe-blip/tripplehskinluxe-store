@@ -1,5 +1,6 @@
 import 'server-only';
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import Papa from 'papaparse';
 import { supabaseAdmin } from '@/lib/supabase-admin.js';
 import { requireStaff } from '@/lib/auth.js';
@@ -99,5 +100,6 @@ export async function POST(req) {
   }
   await db.from('audit_log').insert({ actor: auth.user.id, action: 'product_import', entity: 'products', meta: { created, updated, skipped: errors.length } });
 
+  revalidateTag('catalog'); revalidatePath('/', 'layout');          // the shop shows the import at once
   return NextResponse.json({ created, updated, skipped: errors.length, errors: errors.slice(0, 50), warnings: warnings.slice(0, 50) });
 }

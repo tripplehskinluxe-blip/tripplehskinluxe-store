@@ -18,6 +18,7 @@ function Inner() {
   const { sb, toast } = useAdmin();
   const [rows, setRows] = useState([]);
   const [f, setF] = useState(startForm);
+  const [showForm, setShowForm] = useState(false);
   const [edit, setEdit] = useState(null);       // { id, maxUses, expires } while changing the limits of an existing code
   const [err, setErr] = useState('');
 
@@ -44,42 +45,21 @@ function Inner() {
   async function create(e) {
     e.preventDefault(); setErr('');
     const code = f.code.trim().toUpperCase(), value = Number(f.value), min = Number(f.min || 0);
-    if (!/^[A-Z0-9_-]{3,30}$/.test(code)) return setErr('Code: 3–30 letters, numbers, - or _');
-    if (!Number.isInteger(value) || value <= 0 || (f.type === 'percent' && value > 100)) return setErr(f.type === 'percent' ? 'Percent must be 1–100' : 'Enter a whole number of naira');
+    if (!/^[A-Z0-9_-]{3,30}$/.test(code)) return setErr('Code: 3 to 30 letters, numbers, - or _');
+    if (!Number.isInteger(value) || value <= 0 || (f.type === 'percent' && value > 100)) return setErr(f.type === 'percent' ? 'Percent must be 1 to 100' : 'Enter a whole number of naira');
     if (!Number.isInteger(min) || min < 0) return setErr('Minimum order must be 0 or more');
     const lim = parseLimits(f.maxUses, f.expires); if (lim.error) return setErr(lim.error);
     const { error } = await sb.from('discounts').insert({ code, type: f.type, value, min_order_ngn: min, active: true, max_uses: lim.max_uses, expires_at: lim.expires_at });
     if (error) return setErr(error.code === '23505' ? 'That code already exists' : 'Could not create the code');
-    setF(startForm()); toast('Discount created'); load();
+    setF(startForm()); setShowForm(false); toast('Discount created'); load();
   }
   const toggle = async (d) => { const { error } = await sb.from('discounts').update({ active: !d.active }).eq('id', d.id); if (error) toast('Could not update'); else load(); };
   const del = async (d) => { if (!confirm(`Delete ${d.code}?`)) return; const { error } = await sb.from('discounts').delete().eq('id', d.id); if (error) toast('Could not delete'); else load(); };
 
   return (
     <>
-      <PageHead title="Discounts" sub="Promo codes customers can use at checkout. Prices are always re-checked on the server." />
-      <div className="gr2">
-        <div className="pnl"><div className="tw"><table className="t"><thead><tr><th>Code</th><th>Offer</th><th>Over</th><th>Used</th><th>Expires</th><th>Status</th><th /></tr></thead><tbody>
-          {rows.map((d) => (
-            <tr key={d.id}><td><b>{d.code}</b></td><td>{d.type === 'percent' ? `${d.value}% off` : `${naira(d.value)} off`}</td><td>{d.min_order_ngn ? naira(d.min_order_ngn) : 'Any order'}</td>
-              {edit?.id === d.id ? (
-                <td colSpan={3}>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <input className="inp" style={{ width: 120 }} type="number" min="1" placeholder="Total uses" aria-label="Total uses allowed" value={edit.maxUses} onChange={(e) => setEdit({ ...edit, maxUses: e.target.value })} />
-                    <input className="inp" style={{ width: 160 }} type="date" aria-label="Expires on" value={edit.expires} onChange={(e) => setEdit({ ...edit, expires: e.target.value })} />
-                    <button className="btn s" onClick={() => saveLimits(d)}>Save</button><button className="btn ghost s" onClick={() => setEdit(null)}>Cancel</button>
-                  </div>
-                  <small className="mut">Empty = unlimited / never expires. Already used: {d.uses}</small>
-                </td>
-              ) : (<>
-                <td>{d.max_uses != null ? `${d.uses} / ${d.max_uses}` : `${d.uses} (no limit)`}</td>
-                <td>{d.expires_at ? showDate(d.expires_at) : 'Never'}</td>
-                <td><Pill text={stateOf(d)} /></td>
-              </>)}
-              <td style={{ whiteSpace: 'nowrap' }}>{edit?.id !== d.id && <button className="btn ghost s" onClick={() => setEdit({ id: d.id, maxUses: d.max_uses ?? '', expires: d.expires_at ? new Date(d.expires_at).toLocaleDateString('en-CA', { timeZone: 'Africa/Lagos' }) : '' })}>Limits</button>} <button className="btn ghost s" onClick={() => toggle(d)}>{d.active ? 'Disable' : 'Enable'}</button> <button className="btn danger s" onClick={() => del(d)}>Delete</button></td></tr>
-          ))}
-          {!rows.length && <tr><td colSpan={7} className="mut">No discount codes yet.</td></tr>}
-        </tbody></table></div></div>
+      <PageHead title="Discounts"><button className="btn s" onClick={() => { setShowForm((v) => !v); setErr(''); }}>{showForm ? 'Close' : 'New code'}</button></PageHead>
+      {showForm && (
         <form className="pnl" onSubmit={create}>
           <h3>New code</h3>
           <div className="fld"><label className="f" htmlFor="dc">Code</label><input id="dc" className="inp" style={{ textTransform: 'uppercase' }} value={f.code} maxLength={30} onChange={(e) => setF({ ...f, code: e.target.value })} required /></div>
@@ -92,11 +72,31 @@ function Inner() {
             <div className="fld"><label className="f" htmlFor="dc_uses">Total uses allowed</label><input id="dc_uses" className="inp" type="number" min="1" placeholder="Unlimited" value={f.maxUses} onChange={(e) => setF({ ...f, maxUses: e.target.value })} /></div>
             <div className="fld"><label className="f" htmlFor="dc_exp">Expires on (end of day)</label><input id="dc_exp" className="inp" type="date" value={f.expires} onChange={(e) => setF({ ...f, expires: e.target.value })} /></div>
           </div>
-          <p className="sm mut" style={{ margin: '0 0 10px' }}>Starts with {DEFAULT_USES} uses{f.expires ? ` and the end of ${showDate(`${f.expires}T12:00:00+01:00`)}` : ''}. Empty a box for unlimited / no expiry. You can change these later with Limits.</p>
           {err && <span className="err" style={{ marginBottom: 10 }}>{err}</span>}
           <button className="btn block">Create code</button>
         </form>
-      </div>
+      )}
+        <div className="pnl"><div className="tw"><table className="t"><thead><tr><th>Code</th><th>Offer</th><th>Over</th><th>Used</th><th>Expires</th><th>Status</th><th /></tr></thead><tbody>
+          {rows.map((d) => (
+            <tr key={d.id}><td><b>{d.code}</b></td><td>{d.type === 'percent' ? `${d.value}% off` : `${naira(d.value)} off`}</td><td>{d.min_order_ngn ? naira(d.min_order_ngn) : 'Any order'}</td>
+              {edit?.id === d.id ? (
+                <td colSpan={3}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <input className="inp" style={{ width: 120 }} type="number" min="1" placeholder="Total uses" aria-label="Total uses allowed" value={edit.maxUses} onChange={(e) => setEdit({ ...edit, maxUses: e.target.value })} />
+                    <input className="inp" style={{ width: 160 }} type="date" aria-label="Expires on" value={edit.expires} onChange={(e) => setEdit({ ...edit, expires: e.target.value })} />
+                    <button className="btn s" onClick={() => saveLimits(d)}>Save</button><button className="btn ghost s" onClick={() => setEdit(null)}>Cancel</button>
+                  </div>
+                  <small className="mut">Used so far: {d.uses}</small>
+                </td>
+              ) : (<>
+                <td>{d.max_uses != null ? `${d.uses} / ${d.max_uses}` : `${d.uses} (no limit)`}</td>
+                <td>{d.expires_at ? showDate(d.expires_at) : 'Never'}</td>
+                <td><Pill text={stateOf(d)} /></td>
+              </>)}
+              <td style={{ whiteSpace: 'nowrap' }}>{edit?.id !== d.id && <button className="btn ghost s" onClick={() => setEdit({ id: d.id, maxUses: d.max_uses ?? '', expires: d.expires_at ? new Date(d.expires_at).toLocaleDateString('en-CA', { timeZone: 'Africa/Lagos' }) : '' })}>Limits</button>} <button className="btn ghost s" onClick={() => toggle(d)}>{d.active ? 'Disable' : 'Enable'}</button> <button className="btn danger s" onClick={() => del(d)}>Delete</button></td></tr>
+          ))}
+          {!rows.length && <tr><td colSpan={7} className="mut">No discount codes yet.</td></tr>}
+        </tbody></table></div></div>
     </>
   );
 }

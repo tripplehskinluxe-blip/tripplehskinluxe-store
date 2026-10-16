@@ -26,23 +26,31 @@ function Leaf({ spec, value, path, onChange, onUpload, busy }) {
       <input id={id} type="checkbox" checked={!!value} onChange={(e) => onChange(path, e.target.checked)} /> {spec.label}
     </label>
   );
-  const help = spec.help && <small className="mut" style={{ display: 'block', marginTop: 4 }}>{spec.help}</small>;
   if (spec.t === 'int') return (
     <div className="fld"><label className="f" htmlFor={id}>{spec.label}</label>
-      <input id={id} className="inp" type="number" inputMode="numeric" min={spec.min} max={spec.max} step="1" value={value ?? ''} onChange={(e) => onChange(path, e.target.value === '' ? (spec.optional ? null : '') : Number(e.target.value))} />{help}</div>
+      <input id={id} className="inp" type="number" inputMode="numeric" min={spec.min} max={spec.max} step="1" placeholder={spec.ph} value={value ?? ''} onChange={(e) => onChange(path, e.target.value === '' ? (spec.optional ? null : '') : Number(e.target.value))} /></div>
+  );
+  if (spec.kind === 'image' && onUpload) return (
+    <div className="fld"><span className="f">{spec.label}</span>
+      <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+        {value ? <img src={value} alt="" height={56} style={{ borderRadius: 10 }} /> : <span className="mut sm">No picture</span>}
+        <label className="btn ghost s" style={{ cursor: 'pointer' }}>{busy ? 'Uploading…' : value ? 'Change' : 'Upload'}<input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => onUpload(path, e)} style={{ display: 'none' }} /></label>
+        {value && <button type="button" className="lnkb" onClick={() => onChange(path, '')}>Remove</button>}
+      </div>
+    </div>
   );
   return (
     <div className="fld"><label className="f" htmlFor={id}>{spec.label}</label>
       {spec.multiline
         ? <textarea id={id} className="inp" rows={4} maxLength={spec.max} value={value ?? ''} onChange={(e) => onChange(path, e.target.value)} />
-        : <input id={id} className="inp" maxLength={spec.kind === 'digits' ? undefined : spec.max} value={value ?? ''} onChange={(e) => onChange(path, e.target.value)} />}   {/* numbers may be typed with + and spaces; the server tidies them and checks the length */}
+        : <input id={id} className="inp" placeholder={spec.ph} maxLength={spec.kind === 'digits' ? undefined : spec.max} value={value ?? ''} onChange={(e) => onChange(path, e.target.value)} />}   {/* numbers may be typed with + and spaces; the server tidies them and checks the length */}
       {spec.kind === 'image' && onUpload && (
         <div style={{ marginTop: 8, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => onUpload(path, e)} />
           {value && <><img src={value} alt="" height={56} style={{ borderRadius: 8 }} /><button type="button" className="btn ghost s" onClick={() => onChange(path, '')}>Remove photo</button></>}
         </div>
       )}
-      {help}</div>
+      </div>
   );
 }
 
@@ -51,7 +59,6 @@ export default function SpecForm({ spec, value, path = [], onChange, onUpload, b
     return (
       <div>
         {!hideTitle && <h3 style={{ margin: '4px 0 10px', fontSize: 18 }}>{spec.label}</h3>}
-        {spec.help && <p className="mut sm" style={{ margin: '0 0 10px' }}>{spec.help}</p>}
         {Object.entries(spec.fields).map(([k, f]) => <SpecForm key={k} spec={f} value={value?.[k]} path={[...path, k]} onChange={onChange} onUpload={onUpload} busy={busy} />)}
       </div>
     );
@@ -62,7 +69,6 @@ export default function SpecForm({ spec, value, path = [], onChange, onUpload, b
     return (
       <div style={{ margin: '14px 0' }}>
         <h3 style={{ margin: '4px 0 6px', fontSize: 16 }}>{spec.label} <span className="mut sm">({items.length}/{spec.max})</span></h3>
-        {spec.help && <p className="mut sm" style={{ margin: '0 0 8px' }}>{spec.help}</p>}
         {items.map((it, i) => (
           <div key={i} className="box" style={{ padding: 14, marginBottom: 10 }}>
             <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', marginBottom: 6 }}>

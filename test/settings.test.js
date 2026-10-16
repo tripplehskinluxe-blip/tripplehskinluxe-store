@@ -21,7 +21,7 @@ test('settings: saved values win, per field, over the starting values', () => {
 
 test('settings: damaged saved data never breaks the shop (falls back field by field)', () => {
   const s = buildSettings([row('delivery', { lagosFee: 'free!!', otherFee: -5, freeThreshold: 70000, lagosDays: 12 }), row('store', 'garbage'), row('faq', { items: 'nope' }), row('spa', null)]);
-  assert.equal(s.delivery.lagosFee, 2000); assert.equal(s.delivery.otherFee, 4500); assert.equal(s.delivery.freeThreshold, 70000); assert.equal(s.delivery.lagosDays, '1–3 working days');
+  assert.equal(s.delivery.lagosFee, 2000); assert.equal(s.delivery.otherFee, 4500); assert.equal(s.delivery.freeThreshold, 70000); assert.equal(s.delivery.lagosDays, '1 to 3 working days');
   assert.equal(s.store.name, D.store.name); assert.deepEqual(s.faq.items, D.faq.items); assert.equal(s.spa.headline, D.spa.headline);
 });
 

@@ -9,8 +9,8 @@ export const safeSearch = (s) => String(s || '').replace(/[^\p{L}\p{N}\s.&'-]/gu
 export const Pill = ({ text }) => <span className={`pill ${String(text).toLowerCase().replace(/[^a-z]/g, '')}`}>{text}</span>;
 export const ChannelPill = ({ c }) => <span className={`pill ${c === 'store' ? 'in-store' : 'online'}`}>{c === 'store' ? 'In-store' : 'Online'}</span>;
 
-export const PageHead = ({ title, sub, children }) => (
-  <div className="bk"><div><h1>{title}</h1>{sub && <p className="mut">{sub}</p>}</div><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{children}</div></div>
+export const PageHead = ({ title, children }) => (
+  <div className="bk"><div><h1>{title}</h1></div><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{children}</div></div>
 );
 
 export function Modal({ children, onClose }) {

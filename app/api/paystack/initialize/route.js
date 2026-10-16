@@ -17,7 +17,7 @@ const json = (body, status = 200) => NextResponse.json(body, { status });
 
 // The browser sends ONLY product ids + quantities. Prices, discounts and delivery are all worked out here.
 export async function POST(req) {
-  // No Supabase/Paystack keys yet: tell the checkout page to run in demo mode instead of failing.
+  // No database or Paystack keys yet: tell the checkout page to run in demo mode instead of failing.
   if (!paymentsConfigured()) return json({ demo: true, error: 'Payments are not configured yet' }, 503);
   if (!rateLimit(`init:${getIp(req)}`, 10, 60_000)) return json({ error: 'Too many requests. Please wait a minute.' }, 429);
 

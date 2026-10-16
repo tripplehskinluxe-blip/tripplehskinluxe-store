@@ -11,7 +11,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' };
 
 // Add / remove staff, reset a staff password or authenticator. Admin with two-factor only.
 // The checks that matter run in the DATABASE as the signed-in admin (team_* functions), so they hold even if this file had a bug.
-// The server's secret key is used only for the three things Supabase allows nobody else to do: create, change and delete a login.
+// The server's secret key is used only for the three things only the database's server API can do: create, change and delete a login.
 export async function POST(req) {
   const auth = await requireStaff(req, { adminOnly: true });
   if (auth.error) return auth.error;

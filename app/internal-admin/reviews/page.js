@@ -28,7 +28,7 @@ function Inner() {
         <div className="tw"><table className="t"><thead><tr><th>Product</th><th>Customer</th><th>Rating</th><th>Review</th><th>Status</th><th /></tr></thead><tbody>
           {(rows || []).map((r) => (
             <tr key={r.id}>
-              <td>{r.products?.name || '—'}</td><td>{r.name}<br /><span className="mut sm">{fmtDate(r.created_at)}</span></td><td style={{ color: 'var(--p)', whiteSpace: 'nowrap' }}>{'★'.repeat(r.rating)}</td><td style={{ maxWidth: 320 }}>{r.body}</td>
+              <td>{r.products?.name || 'None'}</td><td>{r.name}<br /><span className="mut sm">{fmtDate(r.created_at)}</span></td><td style={{ color: 'var(--p)', whiteSpace: 'nowrap' }}>{'★'.repeat(r.rating)}</td><td style={{ maxWidth: 320 }}>{r.body}</td>
               <td><Pill text={r.status === 'published' ? 'Published' : r.status === 'hidden' ? 'Hidden' : 'Pending'} /></td>
               <td style={{ whiteSpace: 'nowrap' }}>{r.status !== 'published' && <button className="btn ghost s" onClick={() => setS(r, 'published')}>Publish</button>} {r.status === 'published' && <button className="btn ghost s" onClick={() => setS(r, 'hidden')}>Hide</button>} <button className="btn danger s" onClick={() => del(r)}>Delete</button></td>
             </tr>

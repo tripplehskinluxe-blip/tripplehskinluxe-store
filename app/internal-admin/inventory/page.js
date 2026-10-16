@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { useAdmin } from '@/components/admin/AdminProvider';
+import { refreshShop } from '@/components/admin/refreshShop';
 import { PageHead, Pill, Modal, safeSearch } from '@/components/admin/ui';
 import { fmtDate } from '@/lib/format.js';
 
@@ -9,7 +10,7 @@ const REASON = { order: 'Online order', pos: 'In-store sale', import: 'CSV impor
 const stockText = (n) => (n <= 0 ? 'Out of stock' : n < 5 ? 'Low stock' : 'In stock');
 
 export default function Inventory() {
-  const { sb, toast } = useAdmin();
+  const { sb, toast, token } = useAdmin();
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -32,7 +33,7 @@ export default function Inventory() {
     const n = Number(vals[p.id]);
     if (!Number.isInteger(n) || n < 0) return toast('Enter a whole number, 0 or more');
     const { error } = await sb.rpc('set_stock_count', { p_product: p.id, p_count: n, p_note: 'Manual count' });
-    if (error) toast('Could not update stock'); else { toast('Stock updated'); load(); }
+    if (error) toast('Could not update stock'); else { toast('Stock updated'); refreshShop(token); load(); }
   }
   async function history(p) {
     const { data } = await sb.from('stock_movements').select('id,delta,reason,note,created_at').eq('product_id', p.id).order('created_at', { ascending: false }).limit(25);

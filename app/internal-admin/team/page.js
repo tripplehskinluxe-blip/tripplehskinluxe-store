@@ -34,6 +34,7 @@ function Inner() {
   const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [adding, setAdding] = useState(false);
   const [card, setCard] = useState(null);          // the login details just created, shown once so they can be handed over
   const [resetFor, setResetFor] = useState(null);  // staff id whose password is being reset
   const [resetPw, setResetPw] = useState('');
@@ -58,7 +59,7 @@ function Inner() {
     const { ok, d } = await call({ action: 'create', email: em, password });
     setBusy(false);
     if (!ok) { setErr(d.error || 'Could not create the account.'); return; }
-    setCard({ email: d.email, password, kind: 'new' }); setEmail(''); setPw(''); load();
+    setCard({ email: d.email, password, kind: 'new' }); setEmail(''); setPw(''); setAdding(false); load();
   }
 
   async function doReset(row) {
@@ -88,33 +89,34 @@ function Inner() {
 
   return (
     <>
-      <PageHead title="Team" sub="Add the people who work in the shop. Staff can use Orders, In-store sales, Inventory and Customers, and nothing else." />
+      <PageHead title="Team"><button className="btn s" onClick={() => { setAdding((v) => !v); setErr(''); }}>{adding ? 'Close' : 'Add staff member'}</button></PageHead>
 
       {card && (
-        <div className="pnl" style={{ borderLeft: '4px solid #2e9d62', marginBottom: 18 }}>
-          <h3 style={{ margin: '0 0 6px', fontSize: 18 }}>{card.kind === 'new' ? 'Account created' : 'Password changed'}: give them these</h3>
-          <p className="sm mut" style={{ margin: '0 0 10px' }}>Copy the password now. It is not shown again once you close this box.</p>
-          <p style={{ margin: '4px 0' }}><b>Team address:</b> {address} <button className="btn ghost s" onClick={() => copy(address)}>Copy</button></p>
-          <p style={{ margin: '4px 0' }}><b>Email:</b> {card.email}</p>
-          <p style={{ margin: '4px 0' }}><b>Password:</b> <code>{card.password}</code> <button className="btn ghost s" onClick={() => copy(card.password)}>Copy</button></p>
-          <p className="sm mut" style={{ margin: '10px 0' }}>{card.kind === 'new' ? 'On their first sign-in they scan a QR code with an authenticator app on their OWN phone.' : 'Their existing sessions may stay open until they expire. If someone has left, use Remove instead.'}</p>
-          <button className="btn s" onClick={() => setCard(null)}>I have copied it, close</button>
+        <div className="pnl" style={{ borderLeft: '3px solid var(--ok)' }}>
+          <h3 style={{ marginBottom: 12 }}>{card.kind === 'new' ? 'Account created' : 'Password changed'}</h3>
+          <dl style={{ margin: 0 }}>
+            <div className="vr"><dt>Team address</dt><dd>{address} <button className="lnkb" onClick={() => copy(address)}>Copy</button></dd></div>
+            <div className="vr"><dt>Email</dt><dd>{card.email}</dd></div>
+            <div className="vr"><dt>Password</dt><dd><code>{card.password}</code> <button className="lnkb" onClick={() => copy(card.password)}>Copy</button></dd></div>
+          </dl>
+          <div className="acts" style={{ alignItems: 'center' }}><button className="btn s" onClick={() => setCard(null)}>Done</button><span className="mut sm">Shown once.</span></div>
         </div>
       )}
 
-      <div className="pnl" style={{ marginBottom: 18 }}>
-        <h3 style={{ margin: '0 0 10px', fontSize: 18 }}>Add a staff member</h3>
+      {adding && (
+      <div className="pnl">
+        <h3>New staff member</h3>
         <form onSubmit={add}>
           <div className="fld"><label className="f" htmlFor="tm_email">Their email</label><input id="tm_email" className="inp" type="email" autoComplete="off" maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
           <PasswordField id="tm_pw" value={pw} onChange={setPw} />
           {err && <span className="err" style={{ display: 'block', margin: '8px 0' }}>{err}</span>}
           <button className="btn" disabled={busy || !email || !pw}>{busy ? 'Please wait…' : 'Create staff account'}</button>
         </form>
-        <p className="sm mut" style={{ marginTop: 12 }}>This only creates STAFF. Nobody can be made an admin from here.</p>
       </div>
+      )}
 
       <div className="pnl">
-        <h3 style={{ margin: '0 0 10px', fontSize: 18 }}>Current team</h3>
+        <h3>Current team</h3>
         {!rows ? <p className="mut">Loading…</p> : (
           <div className="tw"><table className="t"><thead><tr><th>Email</th><th>Role</th><th>Last sign-in</th><th /></tr></thead><tbody>
             {rows.map((r) => (
@@ -123,7 +125,7 @@ function Inner() {
                 <td>{r.role === 'admin' ? 'Admin' : 'Staff'}</td>
                 <td>{r.last_sign_in_at ? fmtDate(r.last_sign_in_at) : 'Never'}</td>
                 <td style={{ textAlign: 'right' }}>
-                  {r.role === 'admin' ? <span className="sm mut">Managed in Supabase</span> : resetFor === r.id ? (
+                  {r.role === 'admin' ? <span className="sm mut">Managed in the database</span> : resetFor === r.id ? (
                     <div style={{ textAlign: 'left', minWidth: 260 }}>
                       <PasswordField id={`rp_${r.id}`} value={resetPw} onChange={setResetPw} />
                       <div style={{ display: 'flex', gap: 8 }}><button className="btn s" disabled={busy || !resetPw} onClick={() => doReset(r)}>Set password</button><button className="btn ghost s" onClick={() => { setResetFor(null); setResetPw(''); setErr(''); }}>Cancel</button></div>
@@ -142,7 +144,6 @@ function Inner() {
           </tbody></table></div>
         )}
         {resetFor && err && <span className="err" style={{ display: 'block', margin: '8px 0' }}>{err}</span>}
-        <p className="sm mut" style={{ marginTop: 12 }}>Never share an admin login with staff: they would get access to everything. Admins are added or changed only in Supabase.</p>
       </div>
     </>
   );

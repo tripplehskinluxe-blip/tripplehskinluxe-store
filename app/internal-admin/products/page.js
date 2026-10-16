@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { useAdmin } from '@/components/admin/AdminProvider';
+import { refreshShop } from '@/components/admin/refreshShop';
 import { PageHead, Pill, Modal, AdminOnly, safeSearch } from '@/components/admin/ui';
 import { PRODUCT_COLUMNS, toCSV, downloadCSV, productToRow } from '@/lib/csv.js';
 import { slugify } from '@/lib/rows.js';
@@ -23,7 +24,7 @@ async function toJpeg(file) {
 }
 
 function ProductForm({ p, cats, onClose, onSaved }) {
-  const { sb, toast } = useAdmin();
+  const { sb, toast, token } = useAdmin();
   const [f, setF] = useState({
     name: p?.name || '', brand: p?.brand || '', category_id: p?.category_id || cats[0]?.id || '', price: p?.price_ngn ?? '', old: p?.old_price_ngn ?? '', stock: '',
     sku: p?.sku || '', short: p?.short_description || '', desc: p?.description || '', ing: p?.ingredients || '', how: p?.how_to_use || '',
@@ -44,7 +45,7 @@ function ProductForm({ p, cats, onClose, onSaved }) {
       try {
         const blob = await toJpeg(file);
         const path = `${crypto.randomUUID()}.jpg`;
-        const { error } = await sb.storage.from('products').upload(path, blob, { contentType: 'image/jpeg' });
+        const { error } = await sb.storage.from('products').upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
         if (error) throw error;
         urls.push(sb.storage.from('products').getPublicUrl(path).data.publicUrl);
       } catch { toast('An image could not be uploaded'); }
@@ -81,7 +82,7 @@ function ProductForm({ p, cats, onClose, onSaved }) {
     }
     setBusy(false);
     if (error) return setErr(/sku/.test(error.message) ? 'That SKU is already used by another product' : 'Could not save. Admin access with two-factor is required.');
-    toast('Product saved'); onSaved();
+    toast('Product saved'); refreshShop(token); onSaved();
   }
 
   const inp = (k, label, props = {}) => <div className="fld"><label className="f" htmlFor={`pf_${k}`}>{label}</label><input id={`pf_${k}`} className="inp" value={f[k]} onChange={set(k)} {...props} /></div>;
@@ -95,7 +96,7 @@ function ProductForm({ p, cats, onClose, onSaved }) {
         {inp('sku', 'SKU (optional)', { maxLength: 40 })}
       </div>
       <div className="row2">{inp('price', 'Price (₦)', { type: 'number', min: 0 })}{inp('old', 'Old price (₦, optional)', { type: 'number', min: 0 })}</div>
-      {p ? <p className="sm mut" style={{ marginBottom: 16 }}>Current stock: <b>{p.stock}</b>. Change it in Inventory so every change is logged.</p> : inp('stock', 'Opening stock', { type: 'number', min: 0 })}
+      {p ? <p className="sm" style={{ marginBottom: 16 }}>Current stock: <b>{p.stock}</b></p> : inp('stock', 'Opening stock', { type: 'number', min: 0 })}
       {inp('short', 'Short description', { maxLength: 200 })}{area('desc', 'Description', 4)}{area('ing', 'Ingredients', 2)}{area('how', 'How to use', 2)}
       {inp('tags', 'Tags (comma separated)')}
       <div className="fld"><label className="f">Skin concerns</label><div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>{Object.entries(CONCERNS).map(([k, l]) => <label key={k} style={{ display: 'flex', gap: 6, fontSize: 14 }}><input type="checkbox" checked={f.concerns.includes(k)} onChange={() => toggleConcern(k)} />{l}</label>)}</div></div>
@@ -129,7 +130,7 @@ function ImportModal({ preview, text, onClose, onDone }) {
       <p><b>{preview.created}</b> new products, <b>{preview.updated}</b> to update{preview.skipped ? <>, <b style={{ color: 'var(--err)' }}>{preview.skipped}</b> skipped</> : ''}.</p>
       {preview.errors?.length > 0 && <div className="alert" style={{ display: 'block', marginTop: 14 }}>{preview.errors.slice(0, 8).map((e, i) => <div key={i}>Row {e.row}: {e.error}</div>)}{preview.errors.length > 8 && <div>…and more</div>}</div>}
       {preview.warnings?.length > 0 && <div className="alert" style={{ display: 'block', marginTop: 14 }}><b>Photos removed ({preview.warnings.length}):</b> only photos uploaded here (or from Cloudinary) can be shown. Upload them with Edit product instead.{preview.warnings.slice(0, 5).map((e, i) => <div key={i} className="sm">Row {e.row}: {e.error}</div>)}</div>}
-      <p className="sm mut" style={{ marginTop: 14 }}>Products are matched by SKU, so importing again updates instead of duplicating. Stock changes are logged.</p>
+      
       <div style={{ display: 'flex', gap: 10, marginTop: 18 }}><button className="btn ghost" onClick={onClose}>Cancel</button><button className="btn" onClick={go} disabled={busy || (!preview.created && !preview.updated)}>{busy ? 'Importing…' : 'Import now'}</button></div>
     </Modal>
   );
@@ -161,7 +162,7 @@ function ProductsInner() {
 
   async function setActive(p, v) {
     const { error } = await sb.from('products').update({ is_active: v }).eq('id', p.id);
-    if (error) toast('Could not update'); else { toast(v ? 'Product restored' : 'Product archived'); load(); }
+    if (error) toast('Could not update'); else { toast(v ? 'Product restored' : 'Product archived'); refreshShop(token); load(); }
   }
   async function exportAll() {
     const out = [];

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Icon from './Icon';
 
 const SORTS = [['featured', 'Featured'], ['newest', 'Newest'], ['best', 'Best selling'], ['plh', 'Price: Low to High'], ['phl', 'Price: High to Low'], ['rated', 'Highest Rated']];
-const PRICES = [['', 'Any price'], ['0-10000', 'Under ₦10,000'], ['10000-20000', '₦10,000 – ₦20,000'], ['20000-30000', '₦20,000 – ₦30,000'], ['30000-', '₦30,000 and above']];
+const PRICES = [['', 'Any price'], ['0-10000', 'Under ₦10,000'], ['10000-20000', '₦10,000 to ₦20,000'], ['20000-30000', '₦20,000 to ₦30,000'], ['30000-', '₦30,000 and above']];
 
 function useSetParam() {
   const router = useRouter();

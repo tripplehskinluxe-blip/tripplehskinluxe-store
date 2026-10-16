@@ -5,21 +5,22 @@ export const DEFAULT_SETTINGS = {
   store: {
     name: 'Tripple H Skin Luxe',
     tagline: 'Your beauty. Your ritual.',
+    logo: '/logo.png',
     announce: 'Free delivery on orders over {{freeThreshold}} in Lagos',
     announceOn: true,
     whatsapp: '2348000000000',               // international format, digits only
     phone: '+234 800 000 0000',
     email: 'hello@lumebeauty.ng',            // placeholder: replace with the real address
     address: '15 Admiralty Way, Lekki Phase 1, Lagos, Nigeria',
-    hours: 'Mon–Sat 9am–7pm · Sun 12pm–5pm',
+    hours: 'Mon to Sat 9am to 7pm · Sun 12pm to 5pm',
     social: { instagram: 'https://www.instagram.com/tripplehskinluxe', tiktok: '', facebook: '', youtube: '', x: '' },
   },
   delivery: {
     lagosFee: 2000,
     otherFee: 4500,
     freeThreshold: 50000,
-    lagosDays: '1–3 working days',
-    otherDays: '3–7 working days',
+    lagosDays: '1 to 3 working days',
+    otherDays: '3 to 7 working days',
     returnDays: 7,
     abandonAfterHours: 72,
     processingNote: 'Orders placed before 2pm on working days are processed the same day.',
