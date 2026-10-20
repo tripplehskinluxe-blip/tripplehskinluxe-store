@@ -39,6 +39,7 @@ export const DEFAULT_SETTINGS = {
   },
   spa: {
     headline: 'Spa & Wellness',
+    photo: '/spa/hero.jpg',
     intro: 'Slow down. Our treatments and spa essentials are designed to help you rest, reset and glow.',
     services: [
       { name: 'Signature Facial', duration: '60 min', from: null, description: 'A deep cleanse, gentle exfoliation, massage and hydrating mask tailored to your skin.' },

@@ -1,10 +1,10 @@
 // Demo catalogue used when no database is connected (so `npm run dev` works immediately).
 // Demo products carry no ratings or reviews. Real ones come from the reviews table.
 export const CATEGORIES = [
-  { name: 'Skincare', slug: 'skincare', description: 'Serums, cleansers and moisturisers for every routine.' },
-  { name: 'Body Care', slug: 'body-care', description: 'Butters, scrubs and oils for soft, glowing skin.' },
+  { name: 'Skincare', slug: 'skincare', description: 'Serums, cleansers and moisturisers for every routine.', image_url: '/category/skincare.jpg' },
+  { name: 'Body Care', slug: 'body-care', description: 'Butters, scrubs and oils for soft, glowing skin.', image_url: '/category/body-care.jpg' },
   { name: 'Hair Care', slug: 'hair-care', description: 'Nourishing care for every curl and coil.' },
-  { name: 'Fragrance', slug: 'fragrance', description: 'Signature scents and delicate body mists.' },
+  { name: 'Fragrance', slug: 'fragrance', description: 'Signature scents and delicate body mists.', image_url: '/category/fragrance.jpg' },
   { name: 'Spa & Wellness', slug: 'spa-wellness', description: 'Massage oils, bath soaks and wellness rituals.' },
 ];
 
