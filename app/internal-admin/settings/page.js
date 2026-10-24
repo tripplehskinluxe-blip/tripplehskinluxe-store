@@ -127,7 +127,7 @@ function Inner() {
           <div className="sec-h"><h2>{SPEC[tab].label}</h2>{!editing && <button className="btn ghost s" onClick={startEdit}>Edit</button>}</div>
           {editing ? (
             <>
-              <SpecForm spec={SPEC[tab]} value={draft[tab]} onChange={change} onUpload={tab === 'ceo' || tab === 'store' ? upload : undefined} busy={busy} hideTitle />
+              <SpecForm spec={SPEC[tab]} value={draft[tab]} onChange={change} onUpload={['ceo', 'store', 'spa'].includes(tab) ? upload : undefined} busy={busy} hideTitle />
               {err && <span className="err" style={{ margin: '12px 0', display: 'block' }}>{err}</span>}
               <div className="acts">
                 <button className="btn s" onClick={save} disabled={busy || !dirty}>{busy ? 'Saving…' : 'Save'}</button>
