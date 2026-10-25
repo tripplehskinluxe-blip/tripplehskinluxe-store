@@ -17,8 +17,19 @@ export default function Header({ categories }) {
 
   useEffect(() => { setMenu(false); setSearch(false); }, [path]);
   useEffect(() => { document.body.classList.toggle('lock', menu || search); }, [menu, search]);
+  useEffect(() => {
+    if (!menu) return;
+    const esc = (e) => e.key === 'Escape' && setMenu(false);
+    window.addEventListener('keydown', esc);
+    return () => window.removeEventListener('keydown', esc);
+  }, [menu]);
 
   const enc = encodeURIComponent;
+  const links = [
+    ['/shop', 'Shop', true], ['/spa', 'Spa & Wellness'], ['/brands', 'Brands'], ['/shop?flag=new', 'New Arrivals'],
+    ['/shop?flag=best', 'Best Sellers'], ['/offers', 'Offers'], ['/ceo', 'Meet the CEO'], ['/track-order', 'Track order'],
+    ['/contact', 'Contact'], ['/about', 'About'], ['/faq', 'FAQ'],
+  ];
   return (
     <>
       {announcement && <div className="ann">{announcement}</div>}
@@ -46,29 +57,19 @@ export default function Header({ categories }) {
         </div>
       </header>
       {search && <SearchOverlay onClose={() => setSearch(false)} />}
-      {menu && (
-        <>
-          <div className="bg" onClick={() => setMenu(false)} />
-          <div className="drw">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <Logo store={store} size={40} />
-              <button className="ib" onClick={() => setMenu(false)} aria-label="Close"><Icon n="x" /></button>
-            </div>
-            <Link href="/shop">Shop</Link>
-            <div className="sub">{categories.map((c) => <Link key={c.name} href={`/shop?cat=${enc(c.name)}`}>{c.name}</Link>)}</div>
-            <Link href="/spa">Spa &amp; Wellness</Link>
-            <Link href="/brands">Brands</Link>
-            <Link href="/shop?flag=new">New Arrivals</Link>
-            <Link href="/shop?flag=best">Best Sellers</Link>
-            <Link href="/offers">Offers</Link>
-            <Link href="/ceo">Meet the CEO</Link>
-            <Link href="/track-order">Track order</Link>
-            <Link href="/contact">Contact</Link>
-            <Link href="/about">About</Link>
-            <Link href="/faq">FAQ</Link>
+      <div className={`bg${menu ? ' open' : ''}`} onClick={() => setMenu(false)} aria-hidden="true" />
+      <aside className={`drw${menu ? ' open' : ''}`} aria-hidden={!menu} aria-label="Menu">
+        <div className="drw-top">
+          <Logo store={store} size={36} />
+          <button className="ib" onClick={() => setMenu(false)} aria-label="Close menu" tabIndex={menu ? 0 : -1}><Icon n="x" /></button>
+        </div>
+        {links.map(([href, label, sub], i) => (
+          <div key={href + label} style={{ '--i': i }} className="drw-i">
+            <Link href={href} tabIndex={menu ? 0 : -1}>{label}</Link>
+            {sub && <div className="sub">{categories.map((c) => <Link key={c.name} href={`/shop?cat=${enc(c.name)}`} tabIndex={menu ? 0 : -1}>{c.name}</Link>)}</div>}
           </div>
-        </>
-      )}
+        ))}
+      </aside>
     </>
   );
 }

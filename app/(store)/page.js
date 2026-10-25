@@ -1,25 +1,34 @@
 import Link from 'next/link';
-import ProductArt from '@/components/ProductArt';
+import HeroCollage from '@/components/HeroCollage';
 import ProductGrid from '@/components/ProductGrid';
 import Newsletter from '@/components/Newsletter';
 import Icon from '@/components/Icon';
-import { getHome, getCategories } from '@/lib/catalog.js';
+import { getHome, getCategories, getBrands, hasDb } from '@/lib/catalog.js';
 import { CONCERNS } from '@/data/seed-products.js';
 import { getSettings } from '@/lib/settings.js';
 import { art } from '@/lib/art.js';
-import { naira } from '@/lib/format.js';
+import { HERO_IMAGES } from '@/lib/hero-images.js';
 
 export const revalidate = 60;
 
-const CONCERN_ICON = { acne: 'target', dry: 'drop', darkspots: 'moon', pigment: 'layers', sensitive: 'shield', glow: 'sun' };
+const CONCERN_ICON = { acne: 'acne', dry: 'hydrate', darkspots: 'spots', pigment: 'tone', sensitive: 'calm', glow: 'glow' };
 const CONCERN_DESC = { acne: 'Clear, calm, balanced', dry: 'Deep, lasting hydration', darkspots: 'Even out your tone', pigment: 'Brighter, smoother skin', sensitive: 'Gentle, barrier-first care', glow: 'Lit-from-within skin' };
 const ph = { id: 'ph', slug: 'ph', category: 'Skincare', subcategory: '', name: '', brand: '' };
 
 export default async function Home() {
-  const { store, delivery, spa } = await getSettings();
-  const [{ best, fresh }, cats] = await Promise.all([getHome(), getCategories()]);
+  const { store, spa } = await getSettings();
+  const [{ best, fresh }, cats, dbBrands] = await Promise.all([getHome(), getCategories(), hasDb ? getBrands() : Promise.resolve([])]);
   const [a, b, c] = [best[1] || best[0] || ph, fresh[0] || best[0] || ph, best[4] || best[0] || ph];
-  const strip = ['Authentic products', `Free Lagos delivery over ${naira(delivery.freeThreshold)}`, 'Secure payment with Paystack', 'Chat with us on WhatsApp'];
+  // Hero rotates your existing product photos plus the extra images
+  const own = [a, b, c].flatMap((p) => (p.images || []).slice(0, 1).map((src) => ({ src, alt: p.name })));
+  const slides = [...own, ...HERO_IMAGES].filter((x, i, arr) => arr.findIndex((y) => y.src === x.src) === i);
+  // Brands strip: the brands you named first, then any other brand found in your catalogue
+  const norm = (t) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const seen = new Set();
+  const brandList = [...dbBrands.map((x) => x.name), 'COSRX', 'Face Facts', 'Nine Less', 'Dr. Althea', 'Garnier']
+    .filter((t) => t && !seen.has(norm(t)) && seen.add(norm(t)))
+    .slice(0, 16);
+  const marqueeCopy = Array.from({ length: Math.max(1, Math.ceil(14 / brandList.length)) }, () => brandList).flat();
 
   return (
     <>
@@ -30,14 +39,21 @@ export default async function Home() {
             <p>Discover skincare, body care, hair care, fragrance and spa essentials carefully selected for your everyday routine.</p>
             <div className="bt"><Link className="btn" href="/shop">Shop now</Link><Link className="btn ghost" href="/shop?flag=best">Explore best sellers</Link></div>
           </div>
-          <div className="collage">
-            <div className="cc a"><ProductArt product={a} variant={0} /></div>
-            <div className="cc b"><ProductArt product={b} variant={1} /></div>
-            <div className="cc c"><ProductArt product={c} variant={2} /></div>
-          </div>
+          <HeroCollage slides={slides} />
         </div>
       </section>
-      <div className="strip"><div className="container">{strip.map((t) => <span key={t}>{t}</span>)}</div></div>
+      <div className="strip">
+        <span className="strip-lab">Authentic products</span>
+        <div className="mq" aria-label="Brands we stock">
+          <div className="mq-track">
+            {[0, 1].map((n) => (
+              <div className="mq-set" key={n} aria-hidden={n === 1}>
+                {marqueeCopy.map((t, i) => <Link key={`${n}-${i}`} href={`/shop?brand=${encodeURIComponent(t)}`} tabIndex={n === 1 ? -1 : undefined}>{t}</Link>)}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <section className="sec"><div className="container">
         <div className="sh"><div><h2>Shop by category</h2></div></div>
@@ -76,7 +92,7 @@ export default async function Home() {
         <div className="sh"><div><h2>Shop by concern</h2></div></div>
         <div className="grid g6">
           {Object.entries(CONCERNS).map(([k, label]) => (
-            <Link key={k} className="cn" href={`/shop?concern=${k}`}><Icon n={CONCERN_ICON[k] || 'drop'} s={24} /><div><span>{label}</span><br /><small>{CONCERN_DESC[k]}</small></div></Link>
+            <Link key={k} className="cn" href={`/shop?concern=${k}`}><span className="ci"><Icon n={CONCERN_ICON[k] || 'drop'} s={26} /></span><div><span>{label}</span><br /><small>{CONCERN_DESC[k]}</small></div></Link>
           ))}
         </div>
       </div></section>
