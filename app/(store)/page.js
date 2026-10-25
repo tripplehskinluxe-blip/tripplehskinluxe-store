@@ -37,7 +37,7 @@ export default async function Home() {
           <div className="hero-copy">
             <h1>{store.tagline}</h1>
             <p>Discover skincare, body care, hair care, fragrance and spa essentials carefully selected for your everyday routine.</p>
-            <div className="bt"><Link className="btn" href="/shop">Shop now</Link><Link className="btn ghost" href="/shop?flag=best">Explore best sellers</Link></div>
+            <Link className="hero-link" href="/shop">Shop now</Link>
           </div>
           <HeroCollage slides={slides} />
         </div>

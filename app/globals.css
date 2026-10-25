@@ -1,5 +1,5 @@
 
-:root{--p:#5b2a8c;--pd:#3a1560;--pm:#e4d7f2;--ps:#f6f1fb;--ink:#1f1530;--mut:#6f6581;--line:#e8e0f1;--ok:#2c7a59;--warn:#a9701a;--err:#b83a3a;--r:14px;--sh:0 14px 34px -16px rgba(58,21,96,.35);--serif:var(--font-serif),Georgia,serif;--sans:var(--font-sans),system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+:root{--p:#5b2a8c;--pd:#3a1560;--pm:#e4d7f2;--ps:#f6f1fb;--ink:#1f1530;--mut:#6f6581;--line:#e8e0f1;--ok:#2c7a59;--warn:#a9701a;--err:#b83a3a;--r:14px;--sh:0 14px 34px -16px rgba(58,21,96,.35);--serif:var(--font-serif),Georgia,serif;--classic:var(--font-classic),Georgia,serif;--sans:var(--font-sans),system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
 *{box-sizing:border-box;margin:0}
 html{-webkit-text-size-adjust:100%}
 body{font-family:var(--sans);color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased;line-height:1.6;font-size:15px;overflow-x:hidden}
@@ -71,21 +71,18 @@ h3{font-size:22px}
 /* hero */
 .hero{background:linear-gradient(115deg,#faf7fd 0%,#efe6f9 55%,#e1d0f3 100%);overflow:hidden;position:relative}
 .hero-in{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(30px,5vw,64px);align-items:center;min-height:640px;padding-block:72px}
-.hero h1{font-size:clamp(46px,7.2vw,100px);color:var(--pd);font-weight:300;line-height:.98}
-.hero p{font-size:clamp(16px,1.6vw,19px);color:#4d4060;margin:28px 0 40px;max-width:46ch}
-.hero .bt{display:flex;gap:12px;flex-wrap:wrap}
-.collage{position:relative;height:540px}
-.cc{position:absolute;border-radius:200px 200px 24px 24px;overflow:hidden;box-shadow:var(--sh);background:#fff}
-.cc.a{width:52%;height:84%;left:2%;top:6%}
-.cc.b{width:40%;height:46%;right:2%;top:0;border-radius:24px}
-.cc.c{width:42%;height:42%;right:8%;bottom:2%;border-radius:999px}
-.cc svg{width:100%;height:100%}
-.hs{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;box-sizing:border-box}
-.cc.a .hs{padding:14% 7% 7%}.cc.b .hs{padding:7%}.cc.c .hs{padding:11%}
-.hs.in{animation:hsIn .9s cubic-bezier(.22,.8,.3,1) both}
-.hs.out{animation:hsOut .9s ease both}
-@keyframes hsIn{from{opacity:0;transform:scale(.86) rotate(-7deg)}to{opacity:1;transform:none}}
-@keyframes hsOut{from{opacity:1;transform:none}to{opacity:0;transform:scale(1.1) rotate(6deg)}}
+.hero h1{font-family:var(--classic),var(--serif);font-size:clamp(52px,7.6vw,112px);color:var(--pd);font-weight:500;line-height:.96;letter-spacing:-.01em}
+.hero p{font-family:var(--classic),var(--serif);font-size:clamp(19px,1.9vw,24px);font-weight:500;line-height:1.45;color:#4d4060;margin:26px 0 34px;max-width:40ch}
+.hero-link{display:inline-flex;align-items:center;gap:12px;font-family:var(--classic),var(--serif);font-style:italic;font-weight:600;font-size:clamp(22px,2.1vw,27px);color:var(--p);padding-bottom:4px;border-bottom:1.5px solid currentColor;transition:gap .3s ease,color .2s}
+.hero-link::after{content:'\2192';font-style:normal;transition:transform .3s ease}
+.hero-link:hover{color:var(--pd);gap:18px}
+.collage{position:relative;height:520px}
+.slot{position:absolute;inset:0;overflow:hidden}
+.hs{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;padding:2% 6%;box-sizing:border-box;mix-blend-mode:multiply}
+.hs.in{animation:hsIn .85s cubic-bezier(.65,0,.35,1) both}
+.hs.out{animation:hsOut .85s cubic-bezier(.65,0,.35,1) both}
+@keyframes hsIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes hsOut{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 @media (prefers-reduced-motion:reduce){.hs.in,.hs.out{animation:none}}
 .tag{position:absolute;left:0;bottom:30px;background:#fff;border-radius:14px;padding:12px 16px;box-shadow:var(--sh);font-size:13px;z-index:2}
 .tag b{display:block;font-family:var(--serif);font-size:20px;font-weight:500;color:var(--pd)}
@@ -349,7 +346,7 @@ body.is-admin .wa{display:none}
 .steps button span{display:none}.steps button{justify-content:center}
 .tl{flex-direction:column;gap:14px;margin-left:10px}.tl::before{top:14px;bottom:14px;left:15px;right:auto;width:3px;height:auto}
 .tl .st{display:flex;align-items:center;gap:14px;text-align:left}.tl .st i{margin:0}
-.cc.b{display:none}.cc.a{width:62%}.cc.c{width:46%}
+
 .brands{columns:1}.kv{grid-template-columns:110px 1fr}.big{font-size:52px}
 .thumbs{gap:6px}.modal{padding:20px}
 }
