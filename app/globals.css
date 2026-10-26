@@ -121,6 +121,7 @@ h3{font-size:22px}
 .banner .vis{display:flex;gap:14px;justify-content:center}
 .banner .vis div{width:42%;aspect-ratio:3/4;border-radius:120px 120px 16px 16px;overflow:hidden}
 .banner .vis div:last-child{margin-top:40px}
+.banner .vis img{width:100%;height:100%;object-fit:cover;object-position:25% 50%}
 .cn{display:flex;flex-direction:column;gap:14px;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:22px;transition:.25s;min-height:140px;justify-content:space-between;color:var(--p)}
 .cn div{color:var(--ink)}
 .cn:hover{border-color:var(--p);background:var(--ps)}
