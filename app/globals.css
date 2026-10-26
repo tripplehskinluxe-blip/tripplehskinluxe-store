@@ -474,3 +474,10 @@ body.is-admin .wa{display:none}
 .cn.has-img div br{display:none}
 .cn.has-img div span{display:block;font-size:15.5px;line-height:1.2;overflow-wrap:anywhere}
 .cn.has-img small{display:block;margin-top:3px;font-size:11.5px;line-height:1.35;color:rgba(255,255,255,.82)}
+
+/* track order header: winding road, tilted and fading in from the left */
+.rd-ph{position:relative;overflow:hidden}
+.rd-ph .container{position:relative}
+.rd{position:absolute;top:50%;right:-50px;height:clamp(200px,19vw,260px);transform:translateY(-50%);pointer-events:none}
+.rd img{display:block;height:100%;width:auto}
+@media(max-width:900px){.rd{top:auto;bottom:-20px;right:-70px;height:130px;transform:none;opacity:.24}}
