@@ -11,6 +11,7 @@ import { HERO_IMAGES } from '@/lib/hero-images.js';
 
 export const revalidate = 60;
 
+const CONCERN_IMG = { acne: '/concerns/acne.webp', darkspots: '/concerns/darkspots.webp', pigment: '/concerns/pigment.webp', sensitive: '/concerns/sensitive.webp', glow: '/concerns/glow.webp' };
 const CONCERN_ICON = { acne: 'acne', dry: 'hydrate', darkspots: 'spots', pigment: 'tone', sensitive: 'calm', glow: 'glow' };
 const CONCERN_DESC = { acne: 'Clear, calm, balanced', dry: 'Deep, lasting hydration', darkspots: 'Even out your tone', pigment: 'Brighter, smoother skin', sensitive: 'Gentle, barrier-first care', glow: 'Lit-from-within skin' };
 const ph = { id: 'ph', slug: 'ph', category: 'Skincare', subcategory: '', name: '', brand: '' };
@@ -92,7 +93,7 @@ export default async function Home() {
         <div className="sh"><div><h2>Shop by concern</h2></div></div>
         <div className="grid g6">
           {Object.entries(CONCERNS).map(([k, label]) => (
-            <Link key={k} className="cn" href={`/shop?concern=${k}`}><span className="ci"><Icon n={CONCERN_ICON[k] || 'drop'} s={26} /></span><div><span>{label}</span><br /><small>{CONCERN_DESC[k]}</small></div></Link>
+            <Link key={k} className={'cn has-img' + (CONCERN_IMG[k] ? '' : ' no-img')} href={`/shop?concern=${k}`}>{CONCERN_IMG[k] ? <img className="cn-ph" src={CONCERN_IMG[k]} alt="" width="344" height="364" loading="lazy" decoding="async" /> : <span className="ci"><Icon n={CONCERN_ICON[k] || 'drop'} s={26} /></span>}<div><span>{label}</span><br /><small>{CONCERN_DESC[k]}</small></div></Link>
           ))}
         </div>
       </div></section>

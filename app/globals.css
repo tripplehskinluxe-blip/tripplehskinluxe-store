@@ -460,3 +460,17 @@ body.is-admin .wa{display:none}
 }
 @media(prefers-reduced-motion:reduce){.lg-i,.lg-i img{animation:none!important}}
 @media(prefers-reduced-motion:reduce) and (max-width:900px){.lg-i:nth-child(n+3){display:none}}
+
+/* homepage "Shop by concern": photo cards, same footprint as the old icon cards */
+.cn.has-img{position:relative;overflow:hidden;height:182px;min-height:0;padding:0;border:0;justify-content:flex-end;color:#fff;background:linear-gradient(150deg,var(--pd),var(--p))}
+.cn.has-img:hover{background:linear-gradient(150deg,var(--pd),var(--p))}
+.cn-ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.cn.has-img:hover .cn-ph{transform:scale(1.06)}
+.cn.has-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(36,12,62,.94) 0,rgba(36,12,62,.82) 30%,rgba(36,12,62,.35) 52%,rgba(36,12,62,0) 70%);pointer-events:none}
+.cn.has-img.no-img::after{background:none}
+.cn.has-img .ci{position:absolute;top:16px;left:16px;background:rgba(255,255,255,.16);color:#fff}
+.cn.has-img:hover .ci{background:rgba(255,255,255,.26)}
+.cn.has-img div{position:relative;z-index:1;color:#fff;padding:0 14px 13px}
+.cn.has-img div br{display:none}
+.cn.has-img div span{display:block;font-size:15.5px;line-height:1.2;overflow-wrap:anywhere}
+.cn.has-img small{display:block;margin-top:3px;font-size:11.5px;line-height:1.35;color:rgba(255,255,255,.82)}
