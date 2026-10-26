@@ -15,7 +15,7 @@ export default async function SpaPage() {
   const { items } = await getProducts({ cat: 'Spa & Wellness', pageSize: 12 });
   return (
     <>
-      <section className="spa-hero"><div className="container">
+      <section className="spa-hero"><div className="spa-hero-vis"><img src="/spa/facial.jpg" alt="" /></div><div className="container">
         <h1>{spa.headline}</h1>
         <p>{spa.intro}</p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
