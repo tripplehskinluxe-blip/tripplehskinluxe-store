@@ -11,7 +11,7 @@ import { HERO_IMAGES } from '@/lib/hero-images.js';
 
 export const revalidate = 60;
 
-const CONCERN_IMG = { acne: '/concerns/acne.webp', darkspots: '/concerns/darkspots.webp', pigment: '/concerns/pigment.webp', sensitive: '/concerns/sensitive.webp', glow: '/concerns/glow.webp' };
+const CONCERN_IMG = { dry: '/concerns/dry.webp', acne: '/concerns/acne.webp', darkspots: '/concerns/darkspots.webp', pigment: '/concerns/pigment.webp', sensitive: '/concerns/sensitive.webp', glow: '/concerns/glow.webp' };
 const CONCERN_ICON = { acne: 'acne', dry: 'hydrate', darkspots: 'spots', pigment: 'tone', sensitive: 'calm', glow: 'glow' };
 const CONCERN_DESC = { acne: 'Clear, calm, balanced', dry: 'Deep, lasting hydration', darkspots: 'Even out your tone', pigment: 'Brighter, smoother skin', sensitive: 'Gentle, barrier-first care', glow: 'Lit-from-within skin' };
 const ph = { id: 'ph', slug: 'ph', category: 'Skincare', subcategory: '', name: '', brand: '' };
