@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import ProductGrid from '@/components/ProductGrid';
 import ShopFilters, { SortSelect } from '@/components/ShopFilters';
 import Pagination from '@/components/Pagination';
+import ShopHeroProducts from '@/components/ShopHeroProducts';
 import Icon from '@/components/Icon';
 import { getProducts, getCategories, getBrands } from '@/lib/catalog.js';
 import { CONCERNS } from '@/data/seed-products.js';
@@ -32,9 +33,10 @@ export default async function Shop({ searchParams }) {
 
   return (
     <>
-      <div className="ph"><div className="container">
+      <div className="ph ph-vis"><div className="container">
         <div className="crumb"><Link href="/">Home</Link> / Shop</div>
         <h1>{title}</h1><p>Explore our complete beauty and wellness collection.</p>
+        <ShopHeroProducts />
       </div></div>
       <div className="container">
         <div className="shop">

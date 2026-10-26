@@ -411,3 +411,32 @@ body.is-admin .wa{display:none}
 .spa-hero .container>*{max-width:60%}
 .spa-hero .btn{padding:12px 16px;font-size:11.5px;letter-spacing:.04em}
 }
+
+/* mobile: filter button was display:block (icon stacked over text); make it a compact inline-flex pill */
+@media(max-width:900px){
+.btn.only-m{display:inline-flex;align-items:center;gap:6px}
+.btn.s.only-m{padding:7px 14px;font-size:11.5px}
+}
+
+/* shop header: product cutouts with a bounce; two at a time on mobile */
+.ph-vis{position:relative;overflow:hidden}
+.ph-vis .container{position:relative}
+.shp{position:absolute;right:clamp(20px,4vw,48px);bottom:calc(-1*clamp(32px,5vw,56px));display:flex;align-items:flex-end;gap:clamp(14px,2vw,26px);pointer-events:none}
+.shp-i{position:relative;display:block;animation:shpPop .75s cubic-bezier(.2,1.5,.4,1) both;animation-delay:calc(var(--i)*.12s + .15s)}
+.shp-i::before{content:'';position:absolute;left:10%;right:10%;bottom:-3px;height:9px;border-radius:50%;background:rgba(58,21,96,.28);filter:blur(4px);animation:shpShade 3.6s ease-in-out infinite;animation-delay:calc(var(--i)*.4s + 1.2s)}
+.shp-i img{position:relative;display:block;width:auto;height:var(--h);transform-origin:50% 100%;animation:shpHop 3.6s ease-in-out infinite;animation-delay:calc(var(--i)*.4s + 1.2s)}
+@keyframes shpPop{0%{opacity:0;transform:translateY(46px) scale(.7)}55%{opacity:1;transform:translateY(-10px) scale(1.04)}78%{transform:translateY(3px) scale(.99)}100%{opacity:1;transform:none}}
+@keyframes shpHop{0%,60%,100%{transform:none}70%{transform:translateY(-16px)}80%{transform:scale(1.04,.95)}86%{transform:translateY(-6px)}93%{transform:none}}
+@keyframes shpShade{0%,60%,100%{transform:scaleX(1);opacity:1}70%{transform:scaleX(.72);opacity:.5}80%{transform:scaleX(1);opacity:1}86%{transform:scaleX(.9);opacity:.8}93%{transform:scaleX(1);opacity:1}}
+@keyframes shpSwap{0%{opacity:0;transform:translateY(34px) scale(.7)}6%{opacity:1;transform:translateY(-8px) scale(1.04)}10%,44%{opacity:1;transform:none}50%,100%{opacity:0;transform:translateY(-22px) scale(.85)}}
+@media(max-width:900px){
+.ph-vis .container>.crumb,.ph-vis .container>h1,.ph-vis .container>p{max-width:56%}
+.shp{display:grid;grid-template-columns:auto auto;gap:0 10px;right:18px}
+.shp-i{grid-row:1;animation:shpSwap 6.4s linear infinite both;animation-delay:calc(var(--i)*.1s)}
+.shp-i:nth-child(odd){grid-column:1}
+.shp-i:nth-child(even){grid-column:2}
+.shp-i:nth-child(n+3){animation-delay:calc(3.2s + var(--i)*.1s)}
+.shp-i img{height:var(--hm)}
+}
+@media(prefers-reduced-motion:reduce){.shp-i,.shp-i img,.shp-i::before{animation:none!important}}
+@media(prefers-reduced-motion:reduce) and (max-width:900px){.shp-i:nth-child(n+3){display:none}}
