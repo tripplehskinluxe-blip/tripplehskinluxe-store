@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getBrands } from '@/lib/catalog.js';
+import BrandHeroLogos from '@/components/BrandHeroLogos';
 
 export const metadata = { title: 'Brands' };
 export const revalidate = 300;
@@ -10,7 +11,7 @@ export default async function Brands() {
   brands.forEach((b) => { (groups[b.name[0].toUpperCase()] ||= []).push(b); });
   return (
     <>
-      <div className="ph"><div className="container"><h1>Brands</h1><p>Every brand we stock, A to Z.</p></div></div>
+      <div className="ph ph-vis"><div className="container"><h1>Brands</h1><p>Every brand we stock, A to Z.</p><BrandHeroLogos /></div></div>
       <div className="container" style={{ padding: '40px 20px 90px' }}>
         <div className="brands">
           {Object.keys(groups).sort().map((k) => (

@@ -440,3 +440,23 @@ body.is-admin .wa{display:none}
 }
 @media(prefers-reduced-motion:reduce){.shp-i,.shp-i img,.shp-i::before{animation:none!important}}
 @media(prefers-reduced-motion:reduce) and (max-width:900px){.shp-i:nth-child(n+3){display:none}}
+
+/* brands header: logo cutouts with a stretchy wobble; two at a time on mobile */
+.lgs{position:absolute;top:50%;right:clamp(20px,4vw,48px);transform:translateY(-50%);display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:22px 44px;max-width:620px;pointer-events:none}
+.lg-i{display:block;animation:lgIn .8s cubic-bezier(.2,1.4,.4,1) both;animation-delay:calc(var(--i)*.12s + .15s)}
+.lg-i img{display:block;width:var(--w);height:auto;transform-origin:50% 50%;animation:lgStretch 4s ease-in-out infinite;animation-delay:calc(var(--i)*.45s + 1.2s)}
+@keyframes lgIn{0%{opacity:0;transform:scale(.4,1.4)}55%{opacity:1;transform:scale(1.14,.9)}78%{transform:scale(.97,1.04)}100%{opacity:1;transform:none}}
+@keyframes lgStretch{0%,58%,100%{transform:none}66%{transform:scale(1.14,.9)}74%{transform:scale(.95,1.07)}82%{transform:scale(1.05,.97)}90%{transform:none}}
+@keyframes lgSwap{0%{opacity:0;transform:scale(.4,1.4)}4%{opacity:1;transform:scale(1.15,.88)}7%{transform:scale(.97,1.04)}10%,29%{opacity:1;transform:none}33%,100%{opacity:0;transform:scale(1.3,.8)}}
+@media(max-width:1100px){.lgs{max-width:440px}}
+@media(max-width:900px){
+.lgs{display:grid;grid-template-columns:auto;gap:16px 0;right:18px;justify-items:center;max-width:none}
+.lg-i{grid-column:1;animation:lgSwap 9.6s linear infinite both;animation-delay:calc(var(--i)*.1s)}
+.lg-i:nth-child(odd){grid-row:1}
+.lg-i:nth-child(even){grid-row:2}
+.lg-i:nth-child(n+3){animation-delay:calc(3.2s + var(--i)*.1s)}
+.lg-i:nth-child(5){grid-row:1/3;align-self:center;animation-delay:6.8s}
+.lg-i img{width:var(--wm)}
+}
+@media(prefers-reduced-motion:reduce){.lg-i,.lg-i img{animation:none!important}}
+@media(prefers-reduced-motion:reduce) and (max-width:900px){.lg-i:nth-child(n+3){display:none}}
