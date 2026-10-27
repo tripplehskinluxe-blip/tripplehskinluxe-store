@@ -520,3 +520,15 @@ body.is-admin .wa{display:none}
 @keyframes gbSp{0%,52%{opacity:0;transform:translate(0,0) scale(0)}57%{opacity:1;transform:translate(calc(var(--dx)*.7),calc(var(--dy)*.7)) scale(1.15) rotate(20deg)}74%{opacity:1;transform:translate(var(--dx),var(--dy)) scale(.9) rotate(40deg)}86%,100%{opacity:0;transform:translate(var(--dx),calc(var(--dy) - 14px)) scale(.2) rotate(70deg)}}
 @media(max-width:900px){.gb{--k:.4;right:18px}}
 @media(prefers-reduced-motion:reduce){.gb-box,.gb-lid,.gb-glow,.gb-sp{animation:none}}
+
+/* skeleton loaders */
+.sk{display:block;background:linear-gradient(90deg,#eee6f7 0%,#f9f5fd 45%,#eee6f7 90%);background-size:220% 100%;animation:skShimmer 1.5s ease-in-out infinite;border-radius:8px}
+.media.sk{border-radius:var(--r)}
+.ph .sk{background-image:linear-gradient(90deg,#e6dcf3 0%,#f1eaf9 45%,#e6dcf3 90%)}
+@keyframes skShimmer{0%{background-position:120% 0}100%{background-position:-120% 0}}
+.sk-card .cbody{gap:9px}
+.sk-side{display:grid;gap:26px;align-content:start}
+.sk-cols{display:grid;grid-template-columns:1.6fr 1fr;gap:clamp(24px,4vw,48px)}
+.sk-pd{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,56px);margin-top:18px}
+@media(max-width:900px){.sk-side{display:none}.sk-cols,.sk-pd{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.sk{animation:none}}

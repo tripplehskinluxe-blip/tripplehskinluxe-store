@@ -1,4 +1,5 @@
 'use client';
+import { FormSkeleton } from '@/components/Skeletons';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -75,7 +76,7 @@ export default function Checkout() {
       {err[k] && <span className="err">{err[k]}</span>}</div>
   );
 
-  if (loading) return <div className="container"><p className="mut center" style={{ padding: '90px 0' }}>Loading…</p></div>;
+  if (loading) return <FormSkeleton />;
   if (!lines.length) return <div className="container"><div className="empty" style={{ padding: '110px 0' }}><h3>Your bag is empty</h3><p>Add something to your bag before checking out.</p><Link className="btn" href="/shop">Continue shopping</Link></div></div>;
 
   const summary = (

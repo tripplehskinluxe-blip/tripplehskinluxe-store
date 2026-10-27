@@ -1,4 +1,5 @@
 'use client';
+import { CartSkeleton } from '@/components/Skeletons';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import ProductArt from '@/components/ProductArt';
@@ -35,7 +36,7 @@ export default function CartPage() {
     setPromo(d.discount); localStorage.setItem('ths_promo', JSON.stringify(d.discount)); toast('Promo code applied');
   }
 
-  if (loading) return <div className="container"><p className="mut center" style={{ padding: '90px 0' }}>Loading your bag…</p></div>;
+  if (loading) return <CartSkeleton />;
   if (!lines.length) return (
     <div className="container"><div className="empty" style={{ padding: '110px 0' }}>
       <h3>Your bag is empty</h3><p>Add something you love and it will show up here.</p><Link className="btn" href="/shop">Continue shopping</Link>
