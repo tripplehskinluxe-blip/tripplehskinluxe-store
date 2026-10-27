@@ -498,3 +498,25 @@ body.is-admin .wa{display:none}
 @media(max-width:900px){.tg{right:8px;transform:translateY(-50%) scale(.46);transform-origin:right center}}
 @media(prefers-reduced-motion:reduce){.tg-p{animation:none;offset-distance:8%;opacity:1}}
 @supports not (offset-path:path("M0,0")){.tg{display:none}}
+
+/* wishlist header: gift box that shakes and pops open */
+.gb-ph{position:relative;overflow:hidden}
+.gb-ph .container{position:relative}
+.gb{--k:.68;position:absolute;top:56%;right:clamp(40px,11vw,170px);width:196px;height:232px;transform:translateY(-50%) scale(var(--k));transform-origin:100% 50%;pointer-events:none}
+.gb-box{position:absolute;inset:0;transform-origin:50% 90%;filter:drop-shadow(0 8px 10px rgba(58,21,96,.28));animation:gbShake 5.6s infinite}
+.gb-box img{position:absolute;left:0;top:0;width:196px;height:232px;display:block}
+.gb-lid{transform-origin:50% 40%;animation:gbLid 5.6s infinite}
+.gb-glow{position:absolute;left:50%;top:27%;width:200px;height:200px;margin:-100px 0 0 -100px;border-radius:50%;background:radial-gradient(circle,rgba(255,140,175,.75) 0,rgba(255,140,175,0) 66%);opacity:0;animation:gbGlow 5.6s infinite}
+.gb-sp{position:absolute;left:50%;top:27%;width:20px;height:20px;margin:-10px 0 0 -10px;opacity:0;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:gbSp 5.6s infinite}
+.gb-sp.s1{background:#f5b942;--dx:-70px;--dy:-70px}
+.gb-sp.s2{background:#ff7fae;--dx:-20px;--dy:-98px;animation-delay:.05s}
+.gb-sp.s3{background:#8a5cc9;--dx:45px;--dy:-88px;animation-delay:.1s}
+.gb-sp.s4{background:#f5b942;--dx:88px;--dy:-48px;animation-delay:.03s}
+.gb-sp.s5{background:#ff7fae;--dx:-98px;--dy:-28px;animation-delay:.08s}
+.gb-sp.s6{background:#8a5cc9;--dx:20px;--dy:-60px;animation-delay:.12s;width:14px;height:14px;margin:-7px 0 0 -7px}
+@keyframes gbShake{0%,36%,56%,100%{transform:none}38%{transform:translateX(-3px) rotate(-5deg)}40%{transform:translateX(3px) rotate(5deg)}42%{transform:translateX(-3px) rotate(-4deg)}44%{transform:translateX(3px) rotate(4deg)}46%{transform:translateX(-2px) rotate(-3deg)}48%{transform:translateX(2px) rotate(2.5deg)}50%{transform:translateX(-1px) rotate(-1.5deg)}52%{transform:none}53.5%{transform:scale(1.04,.96)}}
+@keyframes gbLid{0%,52%{transform:none;animation-timing-function:cubic-bezier(.2,1.6,.4,1)}58%{transform:translate(12px,-62px) rotate(-16deg);animation-timing-function:ease-out}62%{transform:translate(10px,-56px) rotate(-13deg);animation-timing-function:ease-in-out}80%{transform:translate(10px,-58px) rotate(-14deg);animation-timing-function:cubic-bezier(.5,0,.8,.4)}88%{transform:none}91%{transform:translateY(-3px)}94%,100%{transform:none}}
+@keyframes gbGlow{0%,52%{opacity:0}58%{opacity:1}80%{opacity:.9}88%,100%{opacity:0}}
+@keyframes gbSp{0%,52%{opacity:0;transform:translate(0,0) scale(0)}57%{opacity:1;transform:translate(calc(var(--dx)*.7),calc(var(--dy)*.7)) scale(1.15) rotate(20deg)}74%{opacity:1;transform:translate(var(--dx),var(--dy)) scale(.9) rotate(40deg)}86%,100%{opacity:0;transform:translate(var(--dx),calc(var(--dy) - 14px)) scale(.2) rotate(70deg)}}
+@media(max-width:900px){.gb{--k:.4;right:18px}}
+@media(prefers-reduced-motion:reduce){.gb-box,.gb-lid,.gb-glow,.gb-sp{animation:none}}

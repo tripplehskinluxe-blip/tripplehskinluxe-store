@@ -19,7 +19,7 @@ export default function Wishlist() {
   const shown = items.filter((p) => wish.includes(p.id));
   return (
     <>
-      <div className="ph"><div className="container"><h1>Wishlist</h1><p>{shown.length} saved item{shown.length === 1 ? '' : 's'}</p></div></div>
+      <div className="ph gb-ph"><div className="gb" aria-hidden="true"><div className="gb-box"><img className="gb-body" src="/wishlist-art/gift-body.webp" alt="" width="196" height="232" /><i className="gb-glow" /><img className="gb-lid" src="/wishlist-art/gift-lid.webp" alt="" width="196" height="232" /><i className="gb-sp s1" /><i className="gb-sp s2" /><i className="gb-sp s3" /><i className="gb-sp s4" /><i className="gb-sp s5" /><i className="gb-sp s6" /></div></div><div className="container"><h1>Wishlist</h1><p>{shown.length} saved item{shown.length === 1 ? '' : 's'}</p></div></div>
       <div className="container" style={{ padding: '36px 20px 80px' }}>
         {loading ? <p className="mut center">Loading…</p> : shown.length ? (
           <>
