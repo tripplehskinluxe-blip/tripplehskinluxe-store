@@ -481,3 +481,10 @@ body.is-admin .wa{display:none}
 .rd{position:absolute;top:50%;right:-50px;height:clamp(200px,19vw,260px);transform:translateY(-50%);pointer-events:none}
 .rd img{display:block;height:100%;width:auto}
 @media(max-width:900px){.rd{top:auto;bottom:-20px;right:-70px;height:130px;transform:none;opacity:.24}}
+
+/* offers header: BEST DEAL stamp */
+.bd-ph{position:relative;overflow:hidden}
+.bd-ph .container{position:relative}
+.bd{position:absolute;top:50%;right:clamp(24px,7vw,100px);height:clamp(150px,15vw,205px);transform:translateY(-50%);pointer-events:none}
+.bd img{display:block;height:100%;width:auto}
+@media(max-width:900px){.bd{top:auto;bottom:14px;right:18px;height:96px;transform:none}}
