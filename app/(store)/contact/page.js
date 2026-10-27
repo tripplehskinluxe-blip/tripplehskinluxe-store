@@ -23,7 +23,7 @@ export default function Contact() {
 
   return (
     <>
-      <div className="ph"><div className="container"><h1>Contact us</h1><p>We usually reply within a few hours.</p></div></div>
+      <div className="ph tg-ph"><div className="tg" aria-hidden="true"><img className="tg-p" src="/contact-art/tg-plane.webp" alt="" width="240" height="209" /></div><div className="container"><h1>Contact us</h1><p>We usually reply within a few hours.</p></div></div>
       <div className="container" style={{ padding: '44px 20px 90px' }}>
         <div className="cols">
           <div>

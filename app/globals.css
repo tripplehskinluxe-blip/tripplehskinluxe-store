@@ -488,3 +488,13 @@ body.is-admin .wa{display:none}
 .bd{position:absolute;top:50%;right:clamp(24px,7vw,100px);height:clamp(150px,15vw,205px);transform:translateY(-50%);pointer-events:none}
 .bd img{display:block;height:100%;width:auto}
 @media(max-width:900px){.bd{top:auto;bottom:14px;right:18px;height:96px;transform:none}}
+
+/* contact header: telegram plane flying a loop-the-loop route */
+.tg-ph{position:relative;overflow:hidden}
+.tg-ph .container{position:relative}
+.tg{position:absolute;top:50%;right:clamp(24px,6vw,90px);width:620px;height:210px;transform:translateY(-50%);pointer-events:none}
+.tg-p{position:absolute;left:0;top:0;width:70px;height:auto;opacity:0;offset-path:path("M60,142 C63,142 73,141 79,141 C86,141 92,142 99,142 C105,142 112,142 118,142 C125,143 130,143 137,143 C143,144 150,144 156,144 C163,145 169,145 175,145 C182,145 188,146 195,146 C201,146 208,146 214,146 C221,146 227,146 234,145 C240,145 247,145 253,144 C259,143 265,143 272,142 C278,141 284,140 291,139 C297,138 303,137 310,136 C316,135 323,133 329,132 C335,130 342,129 347,127 C353,124 360,121 364,117 C369,112 373,107 375,101 C377,95 377,88 375,83 C373,77 368,71 363,68 C358,65 350,63 344,65 C339,66 332,71 329,76 C326,81 324,88 325,94 C325,100 329,107 333,112 C337,116 343,120 349,122 C355,125 361,125 367,126 C373,127 380,126 386,126 C393,126 399,126 406,127 C412,127 419,127 425,127 C432,128 438,128 445,128 C451,129 457,129 464,129 C470,130 477,130 483,130 C490,130 496,131 502,131 C508,131 515,131 521,131 C528,131 534,131 541,130 C547,130 557,129 560,129");offset-rotate:auto 49deg;animation:tgFly 9s linear infinite}
+@keyframes tgFly{0%{offset-distance:0%;opacity:0}6%{opacity:1}86%{opacity:1}92%{offset-distance:100%;opacity:0}100%{offset-distance:100%;opacity:0}}
+@media(max-width:900px){.tg{right:8px;transform:translateY(-50%) scale(.46);transform-origin:right center}}
+@media(prefers-reduced-motion:reduce){.tg-p{animation:none;offset-distance:8%;opacity:1}}
+@supports not (offset-path:path("M0,0")){.tg{display:none}}
