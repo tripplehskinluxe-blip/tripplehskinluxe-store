@@ -8,11 +8,12 @@ import { discountUsable } from '@/lib/pricing.js';
 import { initializeTransaction } from '@/lib/paystack.js';
 import { rateLimit, getIp } from '@/lib/ratelimit.js';
 import { paymentsConfigured } from '@/lib/config.js';
+import { STATES } from '@/lib/ng-areas.js';
 
 export const runtime = 'nodejs';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const clean = (v, max) => String(v ?? '').trim().slice(0, max);
+const clean = (v, max) => String(v ?? '').replace(/[\u0000-\u001f\u007f<>]/g, ' ').trim().slice(0, max);   // no control characters or angle brackets in anything we store
 const json = (body, status = 200) => NextResponse.json(body, { status });
 
 // The browser sends ONLY product ids + quantities. Prices, discounts and delivery are all worked out here.
@@ -38,6 +39,7 @@ export async function POST(req) {
   const a = b.address || {};
   const address = { state: clean(a.state, 40), city: clean(a.city, 80), address: clean(a.address, 200), landmark: clean(a.landmark, 120), notes: clean(a.notes, 300) };
   if (!address.state || !address.city || !address.address) return json({ error: 'Delivery address is incomplete' }, 400);
+  if (!STATES.includes(address.state)) return json({ error: 'Please choose a valid delivery state' }, 400);
 
   const qtyBy = new Map();
   items.forEach((i) => qtyBy.set(i.product_id, (qtyBy.get(i.product_id) || 0) + i.qty));

@@ -3,6 +3,8 @@ import { FormSkeleton } from '@/components/Skeletons';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import AreaInput from '@/components/AreaInput';
+import { STATES, areasFor } from '@/lib/ng-areas.js';
 import ProductArt from '@/components/ProductArt';
 import Icon from '@/components/Icon';
 import { useCart } from '@/components/CartProvider';
@@ -10,7 +12,6 @@ import { useCartLines, totalsFor } from '@/components/useCartLines';
 import { useSettings } from '@/components/SettingsProvider';
 import { naira } from '@/lib/format.js';
 
-const STATES = ['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT - Abuja','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'];
 
 export default function Checkout() {
   const router = useRouter();
@@ -119,7 +120,7 @@ export default function Checkout() {
             {step === 2 && <>
               <h3 style={{ marginBottom: 18 }}>Delivery</h3>
               <div className="fld"><label className="f" htmlFor="c_state">State</label><select id="c_state" className="sel" value={d.state} onChange={set('state')}>{STATES.map((s) => <option key={s}>{s}</option>)}</select></div>
-              <div className="row2">{field('city', 'City / Area')}{field('landmark', 'Apartment / Landmark')}</div>
+              <div className="row2"><AreaInput id="c_city" label="City / Area" value={d.city} suggestions={areasFor(d.state)} stateKey={d.state} error={err.city} onChange={(v) => { setD((p) => ({ ...p, city: v })); setErr((p) => (p.city ? { ...p, city: undefined } : p)); }} />{field('landmark', 'Apartment / Landmark')}</div>
               {field('address', 'Street address')}
               <div className="fld"><label className="f" htmlFor="c_notes">Delivery notes (optional)</label><textarea id="c_notes" className="inp" rows={3} value={d.notes} onChange={set('notes')} /></div>
               <div style={{ display: 'flex', gap: 10 }}><button className="btn ghost" onClick={() => setStep(1)}>Back</button><button className="btn" onClick={next}>Continue to payment</button></div>
