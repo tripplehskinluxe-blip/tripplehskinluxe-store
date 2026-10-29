@@ -22,7 +22,7 @@ export async function POST(req) {
   const c = await lockCheck(db, subjects);
   if (c.error) return NextResponse.json({ error: 'Order tracking is temporarily unavailable. Please try again shortly.' }, { status: 503 });     // fail closed
   if (c.until) { const l = lockedReply(c.until); return NextResponse.json(l.body, { status: l.status }); }
-  const { data: o } = await db.from('orders').select('id,order_number,status,total_ngn,created_at,customer_phone').eq('order_number', num).maybeSingle();
+  const { data: o } = await db.from('orders').select('id,order_number,status,total_ngn,created_at,customer_phone,delivery_method').eq('order_number', num).maybeSingle();
   if (!o || !o.customer_phone || last10(o.customer_phone) !== last10(phone)) {
     const f = await lockFail(db, subjects);
     if (f.until) { const l = lockedReply(f.until); return NextResponse.json(l.body, { status: l.status }); }
@@ -30,5 +30,5 @@ export async function POST(req) {
   }
   await lockClear(db, [`o:${hashOf(num)}`]);
   const { data: items } = await db.from('order_items').select('name,qty').eq('order_id', o.id);
-  return NextResponse.json({ order_number: o.order_number, status: o.status, total: o.total_ngn, created_at: o.created_at, items: items || [] });
+  return NextResponse.json({ order_number: o.order_number, status: o.status, delivery_method: o.delivery_method, total: o.total_ngn, created_at: o.created_at, items: items || [] });
 }

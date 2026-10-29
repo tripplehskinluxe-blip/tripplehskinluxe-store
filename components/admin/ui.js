@@ -2,8 +2,8 @@
 import { useEffect } from 'react';
 import { useAdmin } from './AdminProvider';
 
-export const STATUS = [['pending', 'Pending'], ['processing', 'Processing'], ['packed', 'Packed'], ['shipped', 'Shipped'], ['out_for_delivery', 'Out for delivery'], ['delivered', 'Delivered'], ['cancelled', 'Cancelled']];
-export const statusLabel = (k) => (STATUS.find(([v]) => v === k) || [k, k])[1];
+export const STATUS = [['pending', 'Pending'], ['processing', 'Processing'], ['packed', 'Packed'], ['shipped', 'Shipped'], ['out_for_delivery', 'Out for delivery'], ['ready_for_pickup', 'Ready for pickup'], ['delivered', 'Delivered'], ['cancelled', 'Cancelled']];
+export const statusLabel = (k, method) => (method === 'pickup' && k === 'delivered' ? 'Collected' : (STATUS.find(([v]) => v === k) || [k, k])[1]);
 export const safeSearch = (s) => String(s || '').replace(/[^\p{L}\p{N}\s.&'-]/gu, '').trim().slice(0, 60);
 
 export const Pill = ({ text }) => <span className={`pill ${String(text).toLowerCase().replace(/[^a-z]/g, '')}`}>{text}</span>;

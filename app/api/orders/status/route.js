@@ -7,7 +7,7 @@ import { dbConfigured } from '@/lib/config.js';
 
 export const runtime = 'nodejs';
 
-const read = (db, ref) => db.from('orders').select('order_number,payment_status,status').eq('paystack_reference', ref).maybeSingle();
+const read = (db, ref) => db.from('orders').select('order_number,payment_status,status,delivery_method').eq('paystack_reference', ref).maybeSingle();
 
 // Used by the confirmation page. Returns no personal data; the reference is an unguessable id.
 // Safety net: if the order is still unpaid, ask PAYSTACK (never the browser) whether it was paid, at most once every ~8 seconds

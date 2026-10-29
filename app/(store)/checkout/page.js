@@ -17,16 +17,17 @@ export default function Checkout() {
   const router = useRouter();
   const { cart, clear, toast } = useCart();
   const { lines, loading } = useCartLines();
-  const { delivery } = useSettings();
+  const { delivery, store } = useSettings();
   const [step, setStep] = useState(1);
   const [err, setErr] = useState({});
   const [busy, setBusy] = useState(false);
   const [promo, setPromo] = useState(null);
+  const [method, setMethod] = useState('delivery');   // 'delivery' or 'pickup'
   const [d, setD] = useState({ name: '', email: '', phone: '', state: 'Lagos', city: '', address: '', landmark: '', notes: '' });
 
   useEffect(() => { try { setPromo(JSON.parse(localStorage.getItem('ths_promo') || 'null')); } catch {} }, []);
   const set = (k) => (e) => { setD({ ...d, [k]: e.target.value }); if (err[k]) setErr({ ...err, [k]: undefined }); };
-  const t = totalsFor(lines, promo, d.state === 'Lagos' ? 'lagos' : 'other', delivery);
+  const t = totalsFor(lines, promo, d.state === 'Lagos' ? 'lagos' : 'other', delivery, method);
 
   const validate = (s) => {
     const e = {};
@@ -35,7 +36,7 @@ export default function Checkout() {
       if (!/^\S+@\S+\.\S+$/.test(d.email)) e.email = 'Enter a valid email address';
       if (d.phone.replace(/\D/g, '').length < 10) e.phone = 'Enter a valid phone number';
     }
-    if (s === 2) {
+    if (s === 2 && method === 'delivery') {
       if (!d.city.trim()) e.city = 'Enter your city or area';
       if (!d.address.trim()) e.address = 'Enter your street address';
     }
@@ -53,7 +54,8 @@ export default function Checkout() {
         body: JSON.stringify({
           items: cart.map((c) => ({ product_id: c.id, qty: c.qty })),
           customer: { name: d.name, email: d.email, phone: d.phone },
-          address: { state: d.state, city: d.city, address: d.address, landmark: d.landmark, notes: d.notes },
+          delivery_method: method,
+          address: method === 'pickup' ? {} : { state: d.state, city: d.city, address: d.address, landmark: d.landmark, notes: d.notes },
           discount_code: promo?.code || '',
           expected_total: t.total,        // the server refuses to charge a different amount than the one shown here
         }),
@@ -92,7 +94,7 @@ export default function Checkout() {
       ))}
       <div style={{ borderTop: '1px solid var(--pm)', marginTop: 10, paddingTop: 8 }}>
         <div className="r"><span>Subtotal</span><span>{naira(t.subtotal)}</span></div>
-        <div className="r"><span>Delivery</span><span>{t.delivery ? naira(t.delivery) : 'Free'}</span></div>
+        <div className="r"><span>{method === 'pickup' ? 'Store pickup' : 'Delivery'}</span><span>{t.delivery ? naira(t.delivery) : 'Free'}</span></div>
         {t.discount > 0 && <div className="r" style={{ color: 'var(--ok)' }}><span>Discount ({t.discountCode})</span><span>-{naira(t.discount)}</span></div>}
         <div className="r tot"><span>Total</span><span>{naira(t.total)}</span></div>
       </div>
@@ -118,11 +120,16 @@ export default function Checkout() {
               <button className="btn" onClick={next}>Continue to delivery</button>
             </>}
             {step === 2 && <>
-              <h3 style={{ marginBottom: 18 }}>Delivery</h3>
+              <h3 style={{ marginBottom: 14 }}>How would you like to receive your order?</h3>
+              <label className="pay" style={{ marginBottom: 10 }}><input type="radio" name="dm" checked={method === 'delivery'} onChange={() => { setMethod('delivery'); setErr({}); }} /><span><b>Door delivery</b><small>We deliver to your address. The fee depends on your state.</small></span></label>
+              <label className="pay" style={{ marginBottom: 20 }}><input type="radio" name="dm" checked={method === 'pickup'} onChange={() => { setMethod('pickup'); setErr({}); }} /><span><b>Store pickup</b><small>Free. Ready within 48 hours. You will receive an email from us once ready.</small></span></label>
+              {method === 'pickup' && <div className="box" style={{ background: 'var(--ps)', marginBottom: 20 }}><b>Collect from</b><p className="sm" style={{ marginTop: 6 }}>{store?.address}</p><p className="sm mut" style={{ marginTop: 8 }}>You still pay online now. We will email you a pickup code when your order is ready.</p></div>}
+              {method === 'delivery' && (<>
               <div className="fld"><label className="f" htmlFor="c_state">State</label><select id="c_state" className="sel" value={d.state} onChange={set('state')}>{STATES.map((s) => <option key={s}>{s}</option>)}</select></div>
               <div className="row2"><AreaInput id="c_city" label="City / Area" value={d.city} suggestions={areasFor(d.state)} stateKey={d.state} error={err.city} onChange={(v) => { setD((p) => ({ ...p, city: v })); setErr((p) => (p.city ? { ...p, city: undefined } : p)); }} />{field('landmark', 'Apartment / Landmark')}</div>
               {field('address', 'Street address')}
               <div className="fld"><label className="f" htmlFor="c_notes">Delivery notes (optional)</label><textarea id="c_notes" className="inp" rows={3} value={d.notes} onChange={set('notes')} /></div>
+              </>)}
               <div style={{ display: 'flex', gap: 10 }}><button className="btn ghost" onClick={() => setStep(1)}>Back</button><button className="btn" onClick={next}>Continue to payment</button></div>
             </>}
             {step === 3 && <>

@@ -4,6 +4,7 @@ import Icon from '@/components/Icon';
 import { naira, fmtDate } from '@/lib/format.js';
 
 const STEPS = [['pending', 'Order Received'], ['processing', 'Processing'], ['packed', 'Packed'], ['shipped', 'Shipped'], ['out_for_delivery', 'Out for Delivery'], ['delivered', 'Delivered']];
+const PICKUP_STEPS = [['pending', 'Order Received'], ['processing', 'Preparing'], ['ready_for_pickup', 'Ready for Pickup'], ['delivered', 'Collected']];
 
 export default function TrackOrder() {
   const [res, setRes] = useState(null);
@@ -21,11 +22,12 @@ export default function TrackOrder() {
     } catch { setError('Network error. Please try again.'); }
     setBusy(false);
   }
-  const cur = res ? STEPS.findIndex(([k]) => k === res.status) : -1;
+  const steps = res?.delivery_method === 'pickup' ? PICKUP_STEPS : STEPS;
+  const cur = res ? steps.findIndex(([k]) => k === res.status) : -1;
 
   return (
     <>
-      <div className="ph rd-ph"><div className="rd" aria-hidden="true"><img src="/track/road.webp" alt="" width="722" height="330" /></div><div className="container"><h1>Track your order</h1><p>Enter your order number and the phone number you used at checkout.</p></div></div>
+      <div className="ph"><div className="container"><h1>Track your order</h1><p>Enter your order number and the phone number you used at checkout.</p></div></div>
       <div className="container" style={{ maxWidth: 720, padding: '36px 20px 90px' }}>
         <form className="box" onSubmit={submit}>
           <div className="fld"><label className="f" htmlFor="o">Order number</label><input id="o" className="inp" name="o" placeholder="ONL-2026-1048" required /></div>
@@ -40,7 +42,7 @@ export default function TrackOrder() {
             </div>
             {res.status === 'cancelled' ? <div className="alert" style={{ marginTop: 16 }}>This order was cancelled. Contact us on WhatsApp if you need help.</div> : (
               <div className="tl">
-                {STEPS.map(([k, label], i) => (
+                {steps.map(([k, label], i) => (
                   <div key={k} className={`st ${i <= cur ? 'done' : ''} ${i === cur ? 'cur' : ''}`}><i>{i <= cur && <Icon n="check" s={15} />}</i><span>{label}</span></div>
                 ))}
               </div>

@@ -53,7 +53,7 @@ function Inner() {
         <div className="kv">
           <dt>Order number</dt><dd><b>{num}</b></dd>
           {demo && <><dt>Delivering to</dt><dd>{o.address}, {o.city}, {o.state}</dd></>}
-          <dt>Estimated delivery</dt><dd>{delivery.lagosDays} in Lagos · {delivery.otherDays} nationwide</dd>
+          {!demo && o.delivery_method === 'pickup' ? <><dt>Store pickup</dt><dd>Free. Ready within 48 hours. We will email you once it is ready.<br />Collect from: {store.address}</dd></> : <><dt>Estimated delivery</dt><dd>{delivery.lagosDays} in Lagos · {delivery.otherDays} nationwide</dd></>}
         </div>
         {demo && <div style={{ marginTop: 22 }}>
           {o.items.map((i) => <div key={i.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--line)' }}><span>{i.name} × {i.qty}</span><span>{naira(i.price * i.qty)}</span></div>)}

@@ -23,7 +23,7 @@ export default function OrderDetail() {
   async function setStatus(v) {
     if (v === 'cancelled' && !confirm('Cancel this order? Stock will be put back if it was taken.')) return;
     const { error } = await sb.rpc('set_order_status', { p_order: id, p_status: v });
-    if (error) { toast(/not paid/i.test(error.message) ? 'This order has not been paid yet' : 'Could not update the status'); return; }
+    if (error) { toast(/not paid/i.test(error.message) ? 'This order has not been paid yet' : /pickup/i.test(error.message) ? error.message : 'Could not update the status'); return; }
     toast('Status updated'); load();
     // Tell the customer (online orders; shipped / out for delivery / delivered). Sent once per status, only if email is set up.
     if (o.channel === 'online') {
@@ -47,6 +47,8 @@ export default function OrderDetail() {
   if (missing) return <><PageHead title="Order not found"><Link className="btn ghost s" href={`${base}/orders`}>Back</Link></PageHead></>;
   if (!o) return <p className="mut">Loading…</p>;
   const a = o.address || {};
+  const pickup = o.delivery_method === 'pickup';
+  const options = pickup ? STATUS.filter(([v]) => ['pending', 'processing', 'ready_for_pickup', 'delivered', 'cancelled'].includes(v)) : STATUS.filter(([v]) => v !== 'ready_for_pickup');
   const wa = o.customer_phone ? `https://wa.me/${o.customer_phone.replace(/\D/g, '').replace(/^0/, '234')}?text=${encodeURIComponent(`Hello ${o.customer_name}, this is about your order ${o.order_number}.`)}` : null;
 
   return (
@@ -58,23 +60,34 @@ export default function OrderDetail() {
           <div style={{ marginTop: 10 }}>{role === 'admin' ? <button className="btn s" onClick={markRefunded}>Mark as refunded</button> : <span className="sm">Ask the shop owner to refund this and mark it as refunded.</span>}</div>
         </div>
       )}
-      {o.needs_attention && !(o.status === 'cancelled' && o.payment_status === 'paid') && <div className="alert">This order needs attention: payment was received but an item sold out, the amount did not match, or a promo code went over its limit. Check Paystack and contact the customer.</div>}
+      {o.needs_attention && !(o.status === 'cancelled' && o.payment_status === 'paid') && <div className="alert">This order needs attention: payment was received but an item sold out, the amount did not match, or a promo code went over its limit. Check Paystack and contact the customer.{o.attention_reason && <><br /><b>Reason:</b> {o.attention_reason}</>}</div>}
       <div className="gr2">
         <div>
           <div className="pnl"><h3>Items</h3>
             {items.map((i) => <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--line)' }}><span>{i.name} <span className="mut">× {i.qty}</span></span><b>{naira(i.unit_price_ngn * i.qty)}</b></div>)}
-            <dl className="kv" style={{ marginTop: 16 }}><dt>Subtotal</dt><dd>{naira(o.subtotal_ngn)}</dd><dt>Delivery</dt><dd>{naira(o.delivery_ngn)}</dd><dt>Discount</dt><dd>{o.discount_ngn ? `-${naira(o.discount_ngn)}${o.discount_code ? ` (${o.discount_code})` : ''}` : 'None'}</dd><dt><b>Total</b></dt><dd><b>{naira(o.total_ngn)}</b></dd></dl>
+            <dl className="kv" style={{ marginTop: 16 }}><dt>Subtotal</dt><dd>{naira(o.subtotal_ngn)}</dd><dt>{pickup ? 'Store pickup' : 'Delivery'}</dt><dd>{pickup ? 'Free' : naira(o.delivery_ngn)}</dd><dt>Discount</dt><dd>{o.discount_ngn ? `-${naira(o.discount_ngn)}${o.discount_code ? ` (${o.discount_code})` : ''}` : 'None'}</dd><dt><b>Total</b></dt><dd><b>{naira(o.total_ngn)}</b></dd></dl>
           </div>
           <div className="pnl"><h3>Customer</h3>
             <dl className="kv"><dt>Name</dt><dd>{o.customer_name}</dd><dt>Phone</dt><dd>{o.customer_phone || 'None'}</dd><dt>Email</dt><dd>{o.customer_email || 'None'}</dd>
-              {o.channel === 'online' && <><dt>Address</dt><dd>{[a.address, a.landmark, a.city, a.state].filter(Boolean).join(', ')}</dd>{a.notes && <><dt>Notes</dt><dd>{a.notes}</dd></>}</>}</dl>
+              {o.channel === 'online' && (pickup ? <><dt>Receiving</dt><dd><b>Store pickup</b>: collect at {a.address || 'the shop'}</dd></> : <><dt>Address</dt><dd>{[a.address, a.landmark, a.city, a.state].filter(Boolean).join(', ')}</dd>{a.notes && <><dt>Notes</dt><dd>{a.notes}</dd></>}</>)}</dl>
             {wa && <a className="btn ghost s" style={{ marginTop: 14 }} href={wa} target="_blank" rel="noopener noreferrer">Message on WhatsApp</a>}
           </div>
         </div>
         <div className="pnl"><h3>Status</h3>
           <p style={{ marginBottom: 12 }}><ChannelPill c={o.channel} /> <Pill text={o.payment_status === 'paid' ? 'Paid' : o.payment_status === 'refunded' ? 'Refunded' : o.payment_status === 'failed' ? 'Failed' : 'Unpaid'} /></p>
           <div className="fld"><label className="f">Order status</label>
-            <select className="sel" value={o.status} onChange={(e) => setStatus(e.target.value)} disabled={o.status === 'cancelled'}>{STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+            <select className="sel" value={o.status} onChange={(e) => setStatus(e.target.value)} disabled={o.status === 'cancelled'}>{options.map(([v, l]) => <option key={v} value={v}>{v === 'delivered' && pickup ? 'Collected' : l}</option>)}</select></div>
+          {pickup && o.status !== 'cancelled' && (
+            <div className="pnl" style={{ background: 'var(--ps)', margin: '14px 0' }}>
+              <p style={{ marginBottom: 8 }}><b>Store pickup</b> · free · ready within 48 hours</p>
+              {o.payment_status !== 'paid' && <p className="sm mut">Waiting for payment. It can be marked ready once it is paid.</p>}
+              {o.payment_status === 'paid' && o.status === 'processing' && <button className="btn s" onClick={() => setStatus('ready_for_pickup')}>Mark ready for pickup</button>}
+              {o.status === 'ready_for_pickup' && <>
+                <p style={{ marginBottom: 8 }}>Ready ✓ The customer has been emailed. Pickup code: <b style={{ fontSize: 18, letterSpacing: '.08em' }}>{o.pickup_code}</b><br /><span className="sm mut">Ask the customer to show this code, then mark it as collected.</span></p>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}><button className="btn s" onClick={() => setStatus('delivered')}>Mark as collected</button><button className="btn ghost s" onClick={() => setStatus('processing')}>Not ready</button></div>
+              </>}
+            </div>
+          )}
           <p className="sm mut">Payment method: <b>{o.payment_method.replace(/_/g, ' ')}</b>{o.paid_at && <> · paid {fmtDate(o.paid_at)}</>}</p>
           {o.status === 'cancelled' && <p className="sm mut" style={{ marginTop: 10 }}>Cancelled orders can&apos;t be changed.</p>}
         </div>

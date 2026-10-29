@@ -17,7 +17,7 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
 
   const query = useCallback((from, to) => {
-    let qb = sb.from('orders').select('id,order_number,created_at,customer_name,customer_phone,total_ngn,channel,status,payment_status,payment_method,needs_attention', { count: 'exact' }).order('created_at', { ascending: false });
+    let qb = sb.from('orders').select('id,order_number,created_at,customer_name,customer_phone,total_ngn,channel,status,payment_status,payment_method,needs_attention,delivery_method', { count: 'exact' }).order('created_at', { ascending: false });
     const s = safeSearch(f.q);
     if (s) qb = qb.or(`order_number.ilike.%${s}%,customer_name.ilike.%${s}%,customer_phone.ilike.%${s}%`);
     if (f.status) qb = qb.eq('status', f.status);
@@ -60,7 +60,7 @@ export default function Orders() {
           {rows.map((o) => (
             <tr key={o.id} className={o.needs_attention ? 'lowr' : ''}>
               <td><Link className="lnk" href={`${base}/orders/${o.id}`}>{o.order_number}</Link></td><td><ChannelPill c={o.channel} /></td><td>{o.customer_name}</td><td>{fmtDate(o.created_at)}</td><td>{naira(o.total_ngn)}</td>
-              <td><Pill text={o.payment_status === 'paid' ? 'Paid' : o.payment_status === 'refunded' ? 'Refunded' : o.payment_status === 'failed' ? 'Failed' : 'Unpaid'} /></td><td><Pill text={statusLabel(o.status)} />{o.status === 'cancelled' && o.payment_status === 'paid' && <> <Pill text="Refund due" /></>}</td>
+              <td><Pill text={o.payment_status === 'paid' ? 'Paid' : o.payment_status === 'refunded' ? 'Refunded' : o.payment_status === 'failed' ? 'Failed' : 'Unpaid'} /></td><td><Pill text={statusLabel(o.status, o.delivery_method)} />{o.status === 'cancelled' && o.payment_status === 'paid' && <> <Pill text="Refund due" /></>}</td>
             </tr>
           ))}
           {!rows.length && <tr><td colSpan={7} className="mut">{loading ? 'Loading…' : 'No orders found.'}</td></tr>}

@@ -22,11 +22,12 @@ export function useCartLines() {
   return { lines, loading: loading || !ready };
 }
 
-export function totalsFor(lines, promo, zone, delivery) {
+export function totalsFor(lines, promo, zone, delivery, method = 'delivery') {
   return calcTotals({
     items: lines.map((l) => ({ price: l.p.price, qty: l.qty })),
     discount: promo,
     state: zone === 'lagos' ? 'Lagos' : 'Other',
+    method,
     settings: delivery,
   });
 }

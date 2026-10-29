@@ -8,7 +8,7 @@ import { discountUsable } from '@/lib/pricing.js';
 import { initializeTransaction } from '@/lib/paystack.js';
 import { rateLimit, getIp } from '@/lib/ratelimit.js';
 import { paymentsConfigured } from '@/lib/config.js';
-import { STATES } from '@/lib/ng-areas.js';
+import { STATES, otherStatesFor } from '@/lib/ng-areas.js';
 
 export const runtime = 'nodejs';
 
@@ -36,10 +36,12 @@ export async function POST(req) {
   if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || phone.replace(/\D/g, '').length < 10)
     return json({ error: 'Please check your name, email and phone number' }, 400);
 
+  const method = b.delivery_method === undefined ? 'delivery' : b.delivery_method;
+  if (method !== 'delivery' && method !== 'pickup') return json({ error: 'Please choose how you want to receive your order' }, 400);
   const a = b.address || {};
   const address = { state: clean(a.state, 40), city: clean(a.city, 80), address: clean(a.address, 200), landmark: clean(a.landmark, 120), notes: clean(a.notes, 300) };
-  if (!address.state || !address.city || !address.address) return json({ error: 'Delivery address is incomplete' }, 400);
-  if (!STATES.includes(address.state)) return json({ error: 'Please choose a valid delivery state' }, 400);
+  if (method === 'delivery' && (!address.state || !address.city || !address.address)) return json({ error: 'Delivery address is incomplete' }, 400);
+  if (method === 'delivery' && !STATES.includes(address.state)) return json({ error: 'Please choose a valid delivery state' }, 400);
 
   const qtyBy = new Map();
   items.forEach((i) => qtyBy.set(i.product_id, (qtyBy.get(i.product_id) || 0) + i.qty));
@@ -67,18 +69,24 @@ export async function POST(req) {
   // Tidy-up: cancel checkouts that were never paid (best effort; never blocks a customer).
   try { await db.rpc('cancel_abandoned_orders'); } catch { /* ignore */ }
   // Fresh from the database every time (never the cached copy the pages use): this is the number the customer is charged.
-  let delivery;
-  try { delivery = (await loadSettings(db)).delivery; } catch (e) { console.error('settings lookup', e?.message); return json({ error: 'Something went wrong' }, 500); }   // fail closed: never charge with guessed fees
-  const totals = calcTotals({ items: lines, discount, state: address.state, settings: delivery });
+  let delivery, store;
+  try { const cfg = await loadSettings(db); delivery = cfg.delivery; store = cfg.store; } catch (e) { console.error('settings lookup', e?.message); return json({ error: 'Something went wrong' }, 500); }   // fail closed: never charge with guessed fees
+  const totals = calcTotals({ items: lines, discount, state: address.state, method, settings: delivery });
 
   // The customer must be charged exactly what they were shown. If a price or a delivery fee changed in the meantime, stop and tell them.
   if (b.expected_total !== undefined && (!Number.isInteger(b.expected_total) || b.expected_total !== totals.total))
     return json({ code: 'PRICE_CHANGED', error: 'Prices or delivery fees were just updated. The page will refresh so you can review your new total.', total: totals.total }, 409);
 
+  // A pickup order never uses an address from the browser: it always points at the shop (as saved in Settings).
+  const finalAddress = method === 'pickup' ? { pickup: true, state: 'Lagos', city: '', address: clean(store?.address, 200), landmark: '', notes: '' } : address;
+  // Delivery fees depend on the state. If the city is a known place in a DIFFERENT state, flag it for staff to check before dispatch.
+  const elsewhere = method === 'delivery' ? otherStatesFor(address.state, address.city) : [];
+  const attention = elsewhere.length ? `City "${address.city}" is in ${elsewhere.join(' / ')}, but the customer chose ${address.state}. Check the address before dispatch (the delivery fee depends on the state).` : '';
+
   const reference = 'ths_' + crypto.randomUUID();
   const { data: orderNumber, error: oe } = await db.rpc('create_online_order', {
     p: {
-      reference, name, email, phone, address,
+      reference, name, email, phone, address: finalAddress, delivery_method: method, attention_reason: attention,
       items: lines.map((l) => ({ product_id: l.product_id, qty: l.qty })),
       subtotal: totals.subtotal, delivery: totals.delivery, discount: totals.discount,
       discount_code: totals.discountCode, total: totals.total,
