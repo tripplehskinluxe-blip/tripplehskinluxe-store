@@ -12,16 +12,26 @@ export default function OrderDetail() {
   const [o, setO] = useState(null);
   const [items, setItems] = useState([]);
   const [missing, setMissing] = useState(false);
+  const [refund, setRefund] = useState(null);
 
   const load = useCallback(async () => {
-    const [a, b] = await Promise.all([sb.from('orders').select('*').eq('id', id).maybeSingle(), sb.from('order_items').select('id,name,qty,unit_price_ngn').eq('order_id', id)]);
+    const [a, b, c] = await Promise.all([sb.from('orders').select('*').eq('id', id).maybeSingle(), sb.from('order_items').select('id,name,qty,unit_price_ngn').eq('order_id', id), sb.from('order_refunds').select('status,error,attempts').eq('order_id', id).maybeSingle()]);
     if (!a.data) { setMissing(true); return; }
-    setO(a.data); setItems(b.data || []);
+    setO(a.data); setItems(b.data || []); setRefund(c.data || null);
   }, [sb, id]);
   useEffect(() => { load(); }, [load]);
 
   async function setStatus(v) {
-    if (v === 'cancelled' && !confirm('Cancel this order? Stock will be put back if it was taken.')) return;
+    if (v === 'cancelled') {
+      if (!confirm('Cancel this order? Stock is put back, the customer is emailed, and a paid online order is refunded automatically through Paystack.')) return;
+      try {
+        const r = await fetch('/api/admin/orders/cancel', { method: 'POST', headers: { Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ order_id: id }) });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { toast(d.error || 'Could not cancel the order'); return; }
+        toast(d.refund === 'issued' ? 'Order cancelled · refund issued · customer emailed' : d.refund === 'pending' ? 'Order cancelled · the refund did not go through yet, see below' : 'Order cancelled');
+      } catch { toast('Could not cancel the order'); }
+      load(); return;
+    }
     const { error } = await sb.rpc('set_order_status', { p_order: id, p_status: v });
     if (error) { toast(/not paid/i.test(error.message) ? 'This order has not been paid yet' : /pickup/i.test(error.message) ? error.message : 'Could not update the status'); return; }
     toast('Status updated'); load();
@@ -36,12 +46,22 @@ export default function OrderDetail() {
     }
   }
 
+  async function retryRefund() {
+    try {
+      const r = await fetch('/api/admin/orders/refund', { method: 'POST', headers: { Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ order_id: id }) });
+      const d = await r.json().catch(() => ({}));
+      toast(r.ok && d.refund === 'issued' ? 'Refund issued · customer emailed' : d.error || 'The refund did not go through. Check the reason shown on this page.');
+    } catch { toast('Could not reach the server'); }
+    load();
+  }
+
   async function markRefunded() {
     const note = window.prompt('Paystack refund reference or a short note (optional):', '');
     if (note === null) return;
     const { error } = await sb.rpc('mark_order_refunded', { p_order: id, p_note: note.trim().slice(0, 200) });
     if (error) { toast('Could not mark as refunded. Check you are signed in as the owner.'); return; }
     toast('Marked as refunded'); load();
+    if (o.channel === 'online') { try { await fetch('/api/admin/orders/notify', { method: 'POST', headers: { Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ order_id: id, kind: 'refund' }) }); } catch { /* the refund is recorded either way */ } }
   }
 
   if (missing) return <><PageHead title="Order not found"><Link className="btn ghost s" href={`${base}/orders`}>Back</Link></PageHead></>;
@@ -56,10 +76,21 @@ export default function OrderDetail() {
       <PageHead title={o.order_number} sub={`${fmtDate(o.created_at)} · `}><Link className="btn ghost s" href={`${base}/orders`}>Back</Link></PageHead>
       {o.status === 'cancelled' && o.payment_status === 'paid' && (
         <div className="alert" style={{ display: 'block' }}>
-          <b>Refund due.</b> This order was cancelled after the customer paid {naira(o.total_ngn)}. Refund them in your Paystack dashboard (or hand back the cash for an in-store sale), then record it here.
-          <div style={{ marginTop: 10 }}>{role === 'admin' ? <button className="btn s" onClick={markRefunded}>Mark as refunded</button> : <span className="sm">Ask the shop owner to refund this and mark it as refunded.</span>}</div>
+          <b>Refund due.</b> This order was cancelled after the customer paid {naira(o.total_ngn)}.
+          {o.channel === 'online' ? <>
+            {refund?.status === 'failed' && <><br />The automatic refund did not go through: {refund.error || 'unknown reason'}.</>}
+            {refund?.status === 'processing' && <><br />A refund request is in progress. Check again in a minute.</>}
+            <div style={{ marginTop: 10, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button className="btn s" onClick={retryRefund}>{refund?.status === 'failed' ? 'Retry refund' : 'Refund now'}</button>
+              {role === 'admin' ? <button className="btn ghost s" onClick={markRefunded}>Already refunded in Paystack? Mark as refunded</button> : <span className="sm">Refunded outside Paystack? Ask the shop owner to mark it.</span>}
+            </div>
+          </> : <>
+            {' '}Hand back the cash for this in-store sale, then record it here.
+            <div style={{ marginTop: 10 }}>{role === 'admin' ? <button className="btn s" onClick={markRefunded}>Mark as refunded</button> : <span className="sm">Ask the shop owner to refund this and mark it as refunded.</span>}</div>
+          </>}
         </div>
       )}
+      {o.status === 'cancelled' && o.payment_status === 'refunded' && o.channel === 'online' && <div className="alert" style={{ display: 'block', background: '#e7f3ea', borderColor: '#c6e0cc', color: '#25613a' }}>Refund issued ({naira(o.total_ngn)}){refund?.status === 'processed' ? ' and completed by Paystack.' : '. Paystack is processing it, and it can take a few working days to reach the customer.'}</div>}
       {o.needs_attention && !(o.status === 'cancelled' && o.payment_status === 'paid') && <div className="alert">This order needs attention: payment was received but an item sold out, the amount did not match, or a promo code went over its limit. Check Paystack and contact the customer.{o.attention_reason && <><br /><b>Reason:</b> {o.attention_reason}</>}</div>}
       <div className="gr2">
         <div>

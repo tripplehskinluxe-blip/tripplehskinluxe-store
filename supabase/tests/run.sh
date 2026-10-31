@@ -8,11 +8,11 @@ HERE="$(cd "$(dirname "$0")" && pwd)"; SQL="$HERE/.."
 STUBFILE="${STUB:-$HERE/00_supabase_stub.sql}"     # STUB=.../00_supabase_stub_strict.sql imitates a project where new tables are NOT granted to anyone by default
 run() { if [ -n "${PSQL:-}" ]; then $PSQL "$@"; else su postgres -c "psql $(printf '%q ' "$@")"; fi; }
 status=0
-for t in 10_security_attacks 20_payment_flow 30_hardening_rules 40_least_privilege 50_login_lockout_and_settings 60_team_management 70_refunds_promos_abandoned 80_category_photos 90_delivery_methods; do
+for t in 10_security_attacks 20_payment_flow 30_hardening_rules 40_least_privilege 50_login_lockout_and_settings 60_team_management 70_refunds_promos_abandoned 80_category_photos 90_delivery_methods 92_cancel_and_refund; do
   run -q -c "drop database if exists thsl_test" -c "create database thsl_test" >/dev/null 2>&1
   run -q -v ON_ERROR_STOP=1 -f "$HERE/00_roles.sql" >/dev/null 2>&1
   run -q -d thsl_test -v ON_ERROR_STOP=1 -f "$STUBFILE" >/dev/null || { echo "stub failed"; exit 2; }
-  for m in schema 002_content_and_ratings 003_admin_security 004_storage 005_hardening_pages_email 006_least_privilege 007_settings_and_login_guard 008_team_management 009_refunds_promos_abandoned 010_category_photos 011_delivery_methods; do
+  for m in schema 002_content_and_ratings 003_admin_security 004_storage 005_hardening_pages_email 006_least_privilege 007_settings_and_login_guard 008_team_management 009_refunds_promos_abandoned 010_category_photos 011_delivery_methods 012_cancel_and_refund; do
     run -q -d thsl_test -v ON_ERROR_STOP=1 -f "$SQL/$m.sql" >/dev/null 2>&1 || { echo "migration $m FAILED"; exit 2; }
   done
   out=$(run -q -d thsl_test -f "$HERE/$t.sql" 2>&1)

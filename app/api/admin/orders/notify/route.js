@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin.js';
 import { requireStaff } from '@/lib/auth.js';
 import { rateLimit } from '@/lib/ratelimit.js';
 import { sendStatusEmailOnce } from '@/lib/settlement.js';
+import { sendRefundEmailOnce } from '@/lib/cancellation.js';
 
 export const runtime = 'nodejs';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -19,7 +20,7 @@ export async function POST(req) {
   const b = await req.json().catch(() => ({}));
   if (!UUID.test(b.order_id)) return NextResponse.json({ error: 'Invalid order' }, { status: 400 });
   try {
-    const result = await sendStatusEmailOnce(supabaseAdmin(), b.order_id);
+    const result = b.kind === 'refund' ? await sendRefundEmailOnce(supabaseAdmin(), b.order_id) : await sendStatusEmailOnce(supabaseAdmin(), b.order_id);
     return NextResponse.json({ result });
   } catch (e) {
     console.error('status email failed', e?.message || e);

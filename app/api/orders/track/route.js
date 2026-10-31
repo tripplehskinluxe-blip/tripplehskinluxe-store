@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin.js';
 import { dbConfigured } from '@/lib/config.js';
 import { rateLimit, getIp } from '@/lib/ratelimit.js';
+import { customerCanCancel } from '@/lib/cancellation.js';
 import { lockCheck, lockFail, lockClear, lockedReply, hashOf, ipSubject } from '@/lib/lockout.js';
 
 const NOT_FOUND = { error: 'We could not find that order. Check the order number and phone number.' };
@@ -22,7 +23,7 @@ export async function POST(req) {
   const c = await lockCheck(db, subjects);
   if (c.error) return NextResponse.json({ error: 'Order tracking is temporarily unavailable. Please try again shortly.' }, { status: 503 });     // fail closed
   if (c.until) { const l = lockedReply(c.until); return NextResponse.json(l.body, { status: l.status }); }
-  const { data: o } = await db.from('orders').select('id,order_number,status,total_ngn,created_at,customer_phone,delivery_method').eq('order_number', num).maybeSingle();
+  const { data: o } = await db.from('orders').select('id,order_number,status,total_ngn,created_at,customer_phone,delivery_method,payment_status,channel').eq('order_number', num).maybeSingle();
   if (!o || !o.customer_phone || last10(o.customer_phone) !== last10(phone)) {
     const f = await lockFail(db, subjects);
     if (f.until) { const l = lockedReply(f.until); return NextResponse.json(l.body, { status: l.status }); }
@@ -30,5 +31,6 @@ export async function POST(req) {
   }
   await lockClear(db, [`o:${hashOf(num)}`]);
   const { data: items } = await db.from('order_items').select('name,qty').eq('order_id', o.id);
-  return NextResponse.json({ order_number: o.order_number, status: o.status, delivery_method: o.delivery_method, total: o.total_ngn, created_at: o.created_at, items: items || [] });
+  return NextResponse.json({ order_number: o.order_number, status: o.status, delivery_method: o.delivery_method, can_cancel: customerCanCancel(o), paid: o.payment_status === 'paid',
+    refund: o.status === 'cancelled' ? (o.payment_status === 'refunded' ? 'issued' : o.payment_status === 'paid' ? 'pending' : null) : null, total: o.total_ngn, created_at: o.created_at, items: items || [] });
 }
