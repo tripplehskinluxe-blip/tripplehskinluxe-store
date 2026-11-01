@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAdmin } from '@/components/admin/AdminProvider';
 import { refreshShop } from '@/components/admin/refreshShop';
-import { PageHead, Pill, Modal, AdminOnly, safeSearch } from '@/components/admin/ui';
+import { PageHead, Pill, Modal, ProductsAccess, safeSearch } from '@/components/admin/ui';
 import { PRODUCT_COLUMNS, toCSV, downloadCSV, productToRow } from '@/lib/csv.js';
 import { slugify } from '@/lib/rows.js';
 import { naira } from '@/lib/format.js';
@@ -137,7 +137,7 @@ function ImportModal({ preview, text, onClose, onDone }) {
 }
 
 function ProductsInner() {
-  const { sb, token, toast } = useAdmin();
+  const { sb, token, toast, role } = useAdmin();
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -191,7 +191,7 @@ function ProductsInner() {
       <PageHead title="Products" sub={`${total} ${archived ? 'archived' : 'active'} product${total === 1 ? '' : 's'}`}>
         <button className="btn ghost s" onClick={template}>CSV template</button>
         <button className="btn ghost s" onClick={exportAll}>Export CSV</button>
-        <label className="btn ghost s" style={{ cursor: 'pointer' }}>Import CSV<input type="file" accept=".csv,text/csv" hidden onChange={pickFile} /></label>
+        {role === 'admin' && <label className="btn ghost s" style={{ cursor: 'pointer' }}>Import CSV<input type="file" accept=".csv,text/csv" hidden onChange={pickFile} /></label>}
         <button className="btn s" onClick={() => setEdit('new')}>Add product</button>
       </PageHead>
       <div className="pnl">
@@ -218,4 +218,4 @@ function ProductsInner() {
   );
 }
 
-export default function Products() { return <AdminOnly><ProductsInner /></AdminOnly>; }
+export default function Products() { return <ProductsAccess><ProductsInner /></ProductsAccess>; }

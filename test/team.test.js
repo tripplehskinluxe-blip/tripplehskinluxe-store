@@ -116,3 +116,26 @@ test('validatePassword / validateEmail edge cases', () => {
   assert.equal(validatePassword('Pass\u0000word12345!').ok, false); assert.equal(validatePassword(123456789012).ok, false); assert.equal(validatePassword('é'.repeat(40)).ok, false);
   assert.equal(validateEmail('A@B.CO').email, 'a@b.co'); assert.equal(validateEmail('a b@c.co').ok, false); assert.equal(validateEmail('a@b').ok, false); assert.equal(validateEmail('a@b.co\r\nBcc: x@y.z').ok, false); assert.equal(validateEmail(undefined).ok, false);
 });
+
+test('team: create can allow product editing, but only when asked with a real true; a failure there leaves a safe plain staff account', async () => {
+  const on = mk(); const r = await run(on, { action: 'create', email: 'till@shop.com', password: PW, can_manage_products: true });
+  assert.equal(r.status, 200); assert.deepEqual(on.names(), ['createUser', 'team_set_role', 'team_set_products']);
+  assert.deepEqual(on.log[2][2], { p_user: ID, p_can: true });
+  for (const v of [false, 'true', 1, undefined]) {
+    const m = mk(); await run(m, { action: 'create', email: 'till@shop.com', password: PW, can_manage_products: v });
+    assert.deepEqual(m.names(), ['createUser', 'team_set_role'], `value ${String(v)} must not switch anything on`);
+  }
+  const bad = mk({ rpc: (name) => (name === 'team_set_products' ? { error: { message: 'boom' } } : { error: null }) });
+  const w = await run(bad, { action: 'create', email: 'till@shop.com', password: PW, can_manage_products: true });
+  assert.equal(w.status, 200); assert.match(w.body.warning, /product access could not be switched on/); assert.ok(!bad.names().includes('deleteUser'), 'the account is kept');
+});
+
+test('team: set_products takes only a real on/off for a real person id, and the database has the last word', async () => {
+  const m = mk(); const r = await run(m, { action: 'set_products', user_id: ID, allowed: true });
+  assert.equal(r.status, 200); assert.deepEqual(m.log[0], ['rpc', 'team_set_products', { p_user: ID, p_can: true }]);
+  assert.deepEqual((await run(mk(), { action: 'set_products', user_id: ID, allowed: false })).status, 200);
+  for (const allowed of ['yes', 1, null, undefined]) { const x = mk(); assert.equal((await run(x, { action: 'set_products', user_id: ID, allowed })).status, 400); assert.equal(x.log.length, 0); }
+  const y = mk(); assert.equal((await run(y, { action: 'set_products', user_id: 'nope', allowed: true })).status, 400); assert.equal(y.log.length, 0);
+  assert.equal((await run(mk({ rpc: () => ({ error: { message: 'forbidden', code: '42501' } }) }), { action: 'set_products', user_id: ID, allowed: true })).status, 403);
+  assert.equal((await run(mk({ rpc: () => ({ error: { message: 'that person is not a staff member' } }) }), { action: 'set_products', user_id: ID, allowed: true })).status, 409);
+});

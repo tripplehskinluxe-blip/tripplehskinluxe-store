@@ -142,7 +142,9 @@ export default function AdminProvider({ children }) {
     const { error } = await sb.auth.setSession(d.session);
     setPending(null);
     if (error) return setS({ phase: 'signin', notice: 'Could not start your session. Please sign in again.' });
-    setS({ phase: 'ready', role: d.role, name: d.name });
+    let canProducts = d.role === 'admin';
+    if (!canProducts) { try { const { data } = await sb.rpc('can_edit_products'); canProducts = data === true; } catch { canProducts = false; } }
+    setS({ phase: 'ready', role: d.role, name: d.name, canProducts });
   }, [sb]);
 
   useEffect(() => {
@@ -171,11 +173,11 @@ export default function AdminProvider({ children }) {
   const token = async () => (await sb.auth.getSession()).data.session?.access_token;
   const active = (p) => (p === '' ? path === ADMIN_BASE || path === ADMIN_BASE + '/' : path.startsWith(ADMIN_BASE + p));
   return (
-    <Ctx.Provider value={{ sb, toast, role: s.role, token, base: ADMIN_BASE }}>
+    <Ctx.Provider value={{ sb, toast, role: s.role, canProducts: !!s.canProducts, token, base: ADMIN_BASE }}>
       <div className="adm">
         <aside className={`side ${menu ? 'open' : ''}`}>
           <Logo store={store} href={ADMIN_BASE} size={42} label="Team" />
-          {NAV.filter((n) => !n[3] || s.role === 'admin').map(([p, label, icon]) => <Link key={label} href={ADMIN_BASE + p} className={active(p) ? 'on' : ''}><Icon n={icon} s={18} />{label}</Link>)}
+          {NAV.filter((n) => !n[3] || s.role === 'admin' || (n[1] === 'Products' && s.canProducts)).map(([p, label, icon]) => <Link key={label} href={ADMIN_BASE + p} className={active(p) ? 'on' : ''}><Icon n={icon} s={18} />{label}</Link>)}
           <Link href="/" style={{ marginTop: 20, borderTop: '1px solid var(--line)', borderRadius: 0, paddingTop: 18 }}><Icon n="out" s={18} />View storefront</Link>
         </aside>
         <div className="adm-main">

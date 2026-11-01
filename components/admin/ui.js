@@ -43,6 +43,13 @@ export function Bars({ values, labels, h = 180 }) {
 }
 
 // Wrap admin-only pages. (The database refuses these actions for staff anyway; this just shows a clear message.)
+// Product pages: the owner, or a staff member the owner has allowed to add and edit products. (The database enforces it either way.)
+export function ProductsAccess({ children }) {
+  const { canProducts } = useAdmin();
+  if (!canProducts) return <div className="box"><h3 style={{ marginBottom: 8 }}>Product access needed</h3><p className="mut">Ask the owner to allow you to add and edit products. Staff can use Orders, In-store sales, Inventory and Customers.</p></div>;
+  return children;
+}
+
 export function AdminOnly({ children }) {
   const { role } = useAdmin();
   if (role !== 'admin') return <div className="box"><h3 style={{ marginBottom: 8 }}>Admin access needed</h3><p className="mut">This page is for the owner account. Staff can use Orders, In-store sales, Inventory and Customers.</p></div>;
