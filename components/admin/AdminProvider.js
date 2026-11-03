@@ -140,10 +140,12 @@ export default function AdminProvider({ children }) {
 
   const finish = useCallback(async (d) => {
     const { error } = await sb.auth.setSession(d.session);
-    setPending(null);
-    if (error) return setS({ phase: 'signin', notice: 'Could not start your session. Please sign in again.' });
+    if (error) { setPending(null); return setS({ phase: 'signin', notice: 'Could not start your session. Please sign in again.' }); }
     let canProducts = d.role === 'admin';
     if (!canProducts) { try { const { data } = await sb.rpc('can_edit_products'); canProducts = data === true; } catch { canProducts = false; } }
+    // IMPORTANT: clear the held sign-in details and switch screens in the SAME step. If an "await" sits between the two, the page
+    // draws once with no sign-in details while still on the code screen, and crashes.
+    setPending(null);
     setS({ phase: 'ready', role: d.role, name: d.name, canProducts });
   }, [sb]);
 
