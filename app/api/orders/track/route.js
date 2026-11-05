@@ -31,8 +31,6 @@ export async function POST(req) {
   }
   await lockClear(db, [`o:${hashOf(num)}`]);
   const { data: items } = await db.from('order_items').select('name,qty').eq('order_id', o.id);
-  let review_token = null;
-  if (o.status === 'delivered' && o.channel === 'online') { const rt = await db.rpc('issue_review_token', { p_order: o.id }); review_token = rt.error ? null : rt.data || null; }
   return NextResponse.json({ order_number: o.order_number, status: o.status, delivery_method: o.delivery_method, can_cancel: customerCanCancel(o), paid: o.payment_status === 'paid',
-    refund: o.status === 'cancelled' ? (o.payment_status === 'refunded' ? 'issued' : o.payment_status === 'paid' ? 'pending' : null) : null, review_token, total: o.total_ngn, created_at: o.created_at, items: items || [] });
+    refund: o.status === 'cancelled' ? (o.payment_status === 'refunded' ? 'issued' : o.payment_status === 'paid' ? 'pending' : null) : null, total: o.total_ngn, created_at: o.created_at, items: items || [] });
 }
