@@ -62,6 +62,9 @@ export default function TrackOrder() {
               </div>
             )}
             <p className="sm mut" style={{ marginTop: 10 }}>{res.items.map((i) => `${i.name} × ${i.qty}`).join(' · ')}</p>
+            {res.status === 'delivered' && res.review_token && (
+              <p style={{ marginTop: 18 }}><a className="btn ghost s" href={`/review/${res.review_token}`}>Write a review</a></p>
+            )}
             {res.can_cancel && (
               <div style={{ marginTop: 18 }}>
                 {!confirming ? <button className="btn ghost s" onClick={() => setConfirming(true)}>Cancel this order</button> : (
