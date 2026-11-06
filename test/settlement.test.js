@@ -161,8 +161,8 @@ test('sendEmail: subject is flattened to one line, correct Resend request, error
 });
 
 test('status email templates: unknown status has no email', () => {
-  assert.equal(statusEmail({ ...ORDER, status: 'processing' }, SETTINGS), null);
-  assert.ok(statusEmail({ ...ORDER, status: 'delivered' }, SETTINGS).subject.includes('delivered'));
+  assert.equal(statusEmail({ ...ORDER, status: 'processing' }, [], SETTINGS), null);
+  assert.ok(statusEmail({ ...ORDER, status: 'delivered' }, [], SETTINGS).subject.includes('delivered'));
   assert.ok(confirmationEmail(ORDER, ITEMS, SETTINGS).subject.includes('ONL-2026-1001'));
   // shop name, address and delivery times come from the saved settings, not from code
   const custom = buildSettings([{ key: 'store', value: { ...SETTINGS.store, name: 'Glow House', address: '9 New Road, Ikeja' } }, { key: 'delivery', value: { ...SETTINGS.delivery, lagosDays: 'next day', otherDays: '2 days' } }]);

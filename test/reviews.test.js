@@ -8,19 +8,19 @@ const S = buildSettings([]);
 const ORDER = { id: 'o1', order_number: 'ONL-2026-1001', customer_name: 'Ada', customer_email: 'ada@example.com', status: 'delivered', delivery_method: 'delivery' };
 
 test('delivered email: has a review link when one is given, never invents one, and escapes it', () => {
-  const m = statusEmail(ORDER, S, 'abc123deadbeef');
+  const m = statusEmail(ORDER, [], S, 'abc123deadbeef');
   assert.match(m.html, /\/review\/abc123deadbeef/); assert.match(m.html, /Write a review/); assert.match(m.text, /\/review\/abc123deadbeef/);
-  const none = statusEmail(ORDER, S, null); assert.doesNotMatch(none.html, /\/review\//); assert.doesNotMatch(none.text, /Write a review/);
-  const bare = statusEmail(ORDER, S); assert.doesNotMatch(bare.html, /\/review\//);
-  const evil = statusEmail(ORDER, S, '"><script>alert(1)</script>'); assert.doesNotMatch(evil.html, /<script>alert/);
+  const none = statusEmail(ORDER, [], S, null); assert.doesNotMatch(none.html, /\/review\//); assert.doesNotMatch(none.text, /Write a review/);
+  const bare = statusEmail(ORDER, [], S); assert.doesNotMatch(bare.html, /\/review\//);
+  const evil = statusEmail(ORDER, [], S, '"><script>alert(1)</script>'); assert.doesNotMatch(evil.html, /<script>alert/);
 });
 
 test('a review link is never offered for any status except delivered', () => {
   for (const status of ['pending', 'processing', 'packed', 'shipped', 'out_for_delivery']) {
-    const m = statusEmail({ ...ORDER, status }, S, 'abc123');
+    const m = statusEmail({ ...ORDER, status }, [], S, 'abc123');
     if (m) assert.doesNotMatch(m.html, /\/review\//, status);
   }
-  const collected = statusEmail({ ...ORDER, status: 'delivered', delivery_method: 'pickup' }, S, 'abc123');
+  const collected = statusEmail({ ...ORDER, status: 'delivered', delivery_method: 'pickup' }, [], S, 'abc123');
   assert.match(collected.subject, /collecting/i); assert.match(collected.html, /\/review\/abc123/);
 });
 

@@ -34,16 +34,16 @@ test('confirmation email for pickup says where to collect, not a delivery addres
 });
 
 test('ready-for-pickup email carries the pickup code and the shop address, once escaped', () => {
-  const m = statusEmail({ ...BASE, status: 'ready_for_pickup', delivery_method: 'pickup', pickup_code: 'A3F9C2' }, SETTINGS);
+  const m = statusEmail({ ...BASE, status: 'ready_for_pickup', delivery_method: 'pickup', pickup_code: 'A3F9C2' }, [], SETTINGS);
   assert.match(m.subject, /ready for pickup/i); assert.match(m.html, /A3F9C2/); assert.match(m.html, /Collect from/); assert.match(m.text, /A3F9C2/);
-  const evil = statusEmail({ ...BASE, status: 'ready_for_pickup', delivery_method: 'pickup', pickup_code: '<b>x</b>' }, SETTINGS);
+  const evil = statusEmail({ ...BASE, status: 'ready_for_pickup', delivery_method: 'pickup', pickup_code: '<b>x</b>' }, [], SETTINGS);
   assert.doesNotMatch(evil.html, /<b>x<\/b>/);
 });
 
 test('the wording always matches how the order leaves the shop', () => {
-  assert.equal(statusEmail({ ...BASE, status: 'shipped', delivery_method: 'pickup' }, SETTINGS), null);
-  assert.equal(statusEmail({ ...BASE, status: 'out_for_delivery', delivery_method: 'pickup' }, SETTINGS), null);
-  assert.equal(statusEmail({ ...BASE, status: 'ready_for_pickup', delivery_method: 'delivery' }, SETTINGS), null);
-  assert.match(statusEmail({ ...BASE, status: 'delivered', delivery_method: 'pickup' }, SETTINGS).subject, /collecting/i);
-  assert.match(statusEmail({ ...BASE, status: 'delivered', delivery_method: 'delivery' }, SETTINGS).subject, /delivered/i);
+  assert.equal(statusEmail({ ...BASE, status: 'shipped', delivery_method: 'pickup' }, [], SETTINGS), null);
+  assert.equal(statusEmail({ ...BASE, status: 'out_for_delivery', delivery_method: 'pickup' }, [], SETTINGS), null);
+  assert.equal(statusEmail({ ...BASE, status: 'ready_for_pickup', delivery_method: 'delivery' }, [], SETTINGS), null);
+  assert.match(statusEmail({ ...BASE, status: 'delivered', delivery_method: 'pickup' }, [], SETTINGS).subject, /collecting/i);
+  assert.match(statusEmail({ ...BASE, status: 'delivered', delivery_method: 'delivery' }, [], SETTINGS).subject, /delivered/i);
 });
