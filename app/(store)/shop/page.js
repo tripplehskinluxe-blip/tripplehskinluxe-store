@@ -5,7 +5,7 @@ import ShopFilters, { SortSelect } from '@/components/ShopFilters';
 import Pagination from '@/components/Pagination';
 import ShopHeroProducts from '@/components/ShopHeroProducts';
 import Icon from '@/components/Icon';
-import { getProducts, getCategories, getBrands } from '@/lib/catalog.js';
+import { getProducts, getCategories, getBrands, getSubcategories } from '@/lib/catalog.js';
 import { CONCERNS } from '@/data/seed-products.js';
 import { buildQuery } from '@/lib/format.js';
 
@@ -17,19 +17,19 @@ const str = (v) => (typeof v === 'string' ? v.slice(0, 60) : '');
 export default async function Shop({ searchParams }) {
   const sp = await searchParams;
   const o = {
-    q: str(sp.q), cat: str(sp.cat), brand: str(sp.brand), concern: typeof sp.concern === 'string' && Object.hasOwn(CONCERNS, sp.concern) ? sp.concern : '',
+    q: str(sp.q), cat: str(sp.cat), sub: str(sp.sub), grp: str(sp.grp), brand: str(sp.brand), concern: typeof sp.concern === 'string' && Object.hasOwn(CONCERNS, sp.concern) ? sp.concern : '',
     flag: typeof sp.flag === 'string' && Object.hasOwn(FLAGS, sp.flag) ? sp.flag : '', sort: SORTS.includes(sp.sort) ? sp.sort : '',
     price: /^\d*-\d*$/.test(str(sp.price)) ? sp.price : '', rating: ['4', '4.5'].includes(sp.rating) ? sp.rating : '',
     avail: ['in', 'out'].includes(sp.avail) ? sp.avail : '', page: /^\d{1,3}$/.test(str(sp.page)) ? sp.page : '',
   };
-  const [{ items, total, page, pageSize }, categories, brands] = await Promise.all([getProducts(o), getCategories(), getBrands()]);
+  const [{ items, total, page, pageSize, loose }, categories, brands, subcategories] = await Promise.all([getProducts(o), getCategories(), getBrands(), getSubcategories()]);
 
   const { page: _p, ...base } = o;
   const chips = [
-    o.flag && ['flag', FLAGS[o.flag]], o.cat && ['cat', o.cat], o.brand && ['brand', o.brand], o.concern && ['concern', CONCERNS[o.concern]],
+    o.flag && ['flag', FLAGS[o.flag]], o.cat && ['cat', o.cat], o.sub && ['sub', o.sub], o.grp && !o.sub && ['grp', o.grp], o.brand && ['brand', o.brand], o.concern && ['concern', CONCERNS[o.concern]],
     o.q && ['q', `“${o.q}”`], o.price && ['price', 'Price filter'], o.rating && ['rating', `${o.rating}★+`], o.avail && ['avail', o.avail === 'in' ? 'In stock' : 'Out of stock'],
   ].filter(Boolean);
-  const title = o.flag ? FLAGS[o.flag] : o.cat || 'Shop all';
+  const title = o.flag ? FLAGS[o.flag] : o.sub || o.grp || o.cat || 'Shop all';
 
   return (
     <>
@@ -40,12 +40,13 @@ export default async function Shop({ searchParams }) {
       </div></div>
       <div className="container">
         <div className="shop">
-          <Suspense fallback={null}><ShopFilters categories={categories} brands={brands} concerns={CONCERNS} /></Suspense>
+          <Suspense fallback={null}><ShopFilters categories={categories} brands={brands} concerns={CONCERNS} subcategories={subcategories} /></Suspense>
           <div>
             <div className="bar">
               <span className="mut">{o.q ? `${total} result${total === 1 ? '' : 's'} for “${o.q}”` : `${total} product${total === 1 ? '' : 's'}`}</span>
               <div className="d-sort" style={{ display: 'flex', gap: 10, alignItems: 'center' }}><span className="sm mut">Sort</span><Suspense fallback={null}><SortSelect /></Suspense></div>
             </div>
+            {loose && <p className="sm mut" style={{ marginBottom: 14 }}>No exact matches for “{o.q}”, so these are the closest matches.</p>}
             {chips.length > 0 && (
               <div className="chips">{chips.map(([k, label]) => <Link key={k} className="chip" href={`/shop${buildQuery(base, { [k]: '' })}`}>{label} <Icon n="x" s={13} /></Link>)}</div>
             )}

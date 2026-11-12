@@ -23,10 +23,10 @@ async function toJpeg(file) {
   } finally { URL.revokeObjectURL(url); }
 }
 
-function ProductForm({ p, cats, onClose, onSaved }) {
+function ProductForm({ p, cats, subs = [], onClose, onSaved }) {
   const { sb, toast, token } = useAdmin();
   const [f, setF] = useState({
-    name: p?.name || '', brand: p?.brand || '', category_id: p?.category_id || cats[0]?.id || '', price: p?.price_ngn ?? '', old: p?.old_price_ngn ?? '', stock: '',
+    name: p?.name || '', brand: p?.brand || '', category_id: p?.category_id || cats[0]?.id || '', subcategory: p?.subcategory || '', price: p?.price_ngn ?? '', old: p?.old_price_ngn ?? '', stock: '',
     sku: p?.sku || '', short: p?.short_description || '', desc: p?.description || '', ing: p?.ingredients || '', how: p?.how_to_use || '',
     tags: (p?.tags || []).join(', '), concerns: p?.concerns || [], images: p?.images || [], feat: !!p?.is_featured, best: !!p?.is_best_seller, isnew: !!p?.is_new,
   });
@@ -63,7 +63,7 @@ function ProductForm({ p, cats, onClose, onSaved }) {
     if (!p && (!Number.isInteger(stock) || stock < 0)) return setErr('Opening stock must be 0 or more');
     setBusy(true);
     const row = {
-      name: f.name.trim(), brand: f.brand.trim() || 'Tripple H Skin Luxe', category_id: f.category_id || null, price_ngn: price, old_price_ngn: old,
+      name: f.name.trim(), brand: f.brand.trim() || 'Tripple H Skin Luxe', category_id: f.category_id || null, subcategory: (f.subcategory || '').trim() || null, price_ngn: price, old_price_ngn: old,
       sku: f.sku.trim() || `THS-${String(Date.now()).slice(-6)}`, short_description: f.short.trim() || null, description: f.desc.trim() || null,
       ingredients: f.ing.trim() || null, how_to_use: f.how.trim() || null, tags: f.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 20),
       concerns: f.concerns, images: f.images.filter((u) => /^https:\/\//.test(u)), is_featured: f.feat, is_best_seller: f.best, is_new: f.isnew,
@@ -87,14 +87,26 @@ function ProductForm({ p, cats, onClose, onSaved }) {
 
   const inp = (k, label, props = {}) => <div className="fld"><label className="f" htmlFor={`pf_${k}`}>{label}</label><input id={`pf_${k}`} className="inp" value={f[k]} onChange={set(k)} {...props} /></div>;
   const area = (k, label, rows = 3) => <div className="fld"><label className="f" htmlFor={`pf_${k}`}>{label}</label><textarea id={`pf_${k}`} className="inp" rows={rows} value={f[k]} onChange={set(k)} /></div>;
+  const subOpts = subs.filter((s) => s.category_id === f.category_id);
   return (
     <Modal onClose={onClose}>
       <h3>{p ? 'Edit product' : 'Add product'}</h3>
       <div className="row2">{inp('name', 'Product name', { maxLength: 140 })}{inp('brand', 'Brand', { maxLength: 80 })}</div>
       <div className="row2">
-        <div className="fld"><label className="f" htmlFor="pf_cat">Category</label><select id="pf_cat" className="sel" value={f.category_id} onChange={set('category_id')}>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+        <div className="fld"><label className="f" htmlFor="pf_cat">Category</label><select id="pf_cat" className="sel" value={f.category_id} onChange={(e) => setF((s) => ({ ...s, category_id: e.target.value, subcategory: '' }))}>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
         {inp('sku', 'SKU (optional)', { maxLength: 40 })}
       </div>
+      {(subOpts.length > 0 || f.subcategory) && (
+        <div className="fld"><label className="f" htmlFor="pf_sub">Subcategory</label>
+          <select id="pf_sub" className="sel" value={f.subcategory} onChange={set('subcategory')}>
+            <option value="">None</option>
+            {f.subcategory && !subOpts.some((s) => s.name === f.subcategory) && <option value={f.subcategory}>{`${f.subcategory} (not in the list)`}</option>}
+            {subOpts.filter((s) => !s.group_name).map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
+            {[...new Set(subOpts.map((s) => s.group_name).filter(Boolean))].map((g) => (
+              <optgroup key={g} label={g}>{subOpts.filter((s) => s.group_name === g).map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}</optgroup>
+            ))}
+          </select></div>
+      )}
       <div className="row2">{inp('price', 'Price (₦)', { type: 'number', min: 0 })}{inp('old', 'Old price (₦, optional)', { type: 'number', min: 0 })}</div>
       {p ? <p className="sm" style={{ marginBottom: 16 }}>Current stock: <b>{p.stock}</b></p> : inp('stock', 'Opening stock', { type: 'number', min: 0 })}
       {inp('short', 'Short description', { maxLength: 200 })}{area('desc', 'Description', 4)}{area('ing', 'Ingredients', 2)}{area('how', 'How to use', 2)}
@@ -144,6 +156,7 @@ function ProductsInner() {
   const [q, setQ] = useState('');
   const [archived, setArchived] = useState(false);
   const [cats, setCats] = useState([]);
+  const [subs, setSubs] = useState([]);
   const [edit, setEdit] = useState(null);       // null | 'new' | product
   const [imp, setImp] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -159,6 +172,7 @@ function ProductsInner() {
   }, [sb, q, page, archived, toast]);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { sb.from('categories').select('id,name').order('name').then(({ data }) => setCats(data || [])); }, [sb]);
+  useEffect(() => { sb.from('subcategories').select('category_id,name,group_name,sort').order('sort').order('name').then(({ data }) => setSubs(data || [])); }, [sb]);
 
   async function setActive(p, v) {
     const { error } = await sb.from('products').update({ is_active: v }).eq('id', p.id);
@@ -212,7 +226,7 @@ function ProductsInner() {
         </tbody></table></div>
         {total > PAGE && <div className="pager"><button className="btn ghost s" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</button><span className="cur">Page {page} of {Math.ceil(total / PAGE)}</span><button className="btn ghost s" disabled={page * PAGE >= total} onClick={() => setPage(page + 1)}>Next</button></div>}
       </div>
-      {edit && <ProductForm p={edit === 'new' ? null : edit} cats={cats} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); load(); }} />}
+      {edit && <ProductForm p={edit === 'new' ? null : edit} cats={cats} subs={subs} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); load(); }} />}
       {imp && <ImportModal preview={imp.preview} text={imp.text} onClose={() => setImp(null)} onDone={() => { setImp(null); load(); }} />}
     </>
   );

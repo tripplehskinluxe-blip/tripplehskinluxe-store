@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAdmin } from '@/components/admin/AdminProvider';
 import { refreshShop } from '@/components/admin/refreshShop';
 import { PageHead, AdminOnly } from '@/components/admin/ui';
+import SubcategoryEditor from '@/components/admin/SubcategoryEditor';
 import { slugify } from '@/lib/rows.js';
 
 const startForm = () => ({ id: null, name: '', slug: '', description: '', sort: '0', image_url: '' });
@@ -109,6 +110,8 @@ function Inner() {
           <div className="acts"><button className="btn s" disabled={busy || uploading}>{busy ? 'Saving…' : 'Save'}</button><button type="button" className="btn ghost s" onClick={close}>Cancel</button></div>
         </form>
       )}
+      {showForm && f.id && <SubcategoryEditor categoryId={f.id} categoryName={f.name} />}
+      {showForm && !f.id && <p className="mut sm" style={{ margin: '-8px 0 18px' }}>Save the category first, then you can add its subcategories.</p>}
       <div className="pnl"><div className="tw"><table className="t"><thead><tr><th /><th>Name</th><th>Web address</th><th>Order</th><th /></tr></thead><tbody>
         {(rows || []).map((c) => (
           <tr key={c.id}>

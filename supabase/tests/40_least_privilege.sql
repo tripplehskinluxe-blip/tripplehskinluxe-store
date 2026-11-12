@@ -16,10 +16,10 @@ insert into public.orders(order_number,channel,payment_method,subtotal_ngn,total
 insert into public.reviews(product_id,name,rating,body,status) select id,'R',5,'good','published' from public.products where sku='S1';
 insert into public.reviews(product_id,name,rating,body,status) select id,'R',1,'pending','pending' from public.products where sku='S1';
 
-\echo --- NOT SIGNED IN (anon): exactly SELECT on five public tables, nothing else
-select pg_temp.expect('anon holds nothing except SELECT on categories/products/reviews/settings/pages',
+\echo --- NOT SIGNED IN (anon): exactly SELECT on six public tables, nothing else
+select pg_temp.expect('anon holds nothing except SELECT on categories/subcategories/products/reviews/settings/pages',
   (select count(*)::text from information_schema.role_table_grants where grantee='anon' and table_schema='public'
-     and not (privilege_type='SELECT' and table_name in ('categories','products','reviews','settings','pages'))), '0');
+     and not (privilege_type='SELECT' and table_name in ('categories','subcategories','products','reviews','settings','pages'))), '0');
 select pg_temp.expect('anon can run ZERO database functions',
   (select count(*)::text from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and has_function_privilege('anon', p.oid, 'execute')), '0');
 set role anon;

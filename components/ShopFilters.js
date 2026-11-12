@@ -17,6 +17,18 @@ function useSetParam() {
   };
 }
 
+// Like useSetParam, but changes several filters at once (for example: a new category also clears the subcategory).
+function useSetParams() {
+  const router = useRouter();
+  const sp = useSearchParams();
+  return (obj) => {
+    const p = new URLSearchParams(sp.toString());
+    Object.entries(obj).forEach(([k, v]) => { if (v) p.set(k, v); else p.delete(k); });
+    p.delete('page');
+    router.push('/shop' + (p.toString() ? '?' + p.toString() : ''));
+  };
+}
+
 export function SortSelect() {
   const sp = useSearchParams();
   const set = useSetParam();
@@ -27,12 +39,16 @@ export function SortSelect() {
   );
 }
 
-export default function ShopFilters({ categories, brands, concerns }) {
+export default function ShopFilters({ categories, brands, concerns, subcategories = [] }) {
   const router = useRouter();
   const sp = useSearchParams();
   const set = useSetParam();
   const [open, setOpen] = useState(false);
   const get = (k) => sp.get(k) || '';
+  const setMany = useSetParams();
+  const subs = subcategories.filter((s) => s.category === get('cat'));
+  const groups = [...new Set(subs.map((s) => s.group).filter(Boolean))];
+  const typeValue = get('sub') ? `sub:${get('sub')}` : get('grp') ? `grp:${get('grp')}` : '';
 
   return (
     <>
@@ -47,7 +63,20 @@ export default function ShopFilters({ categories, brands, concerns }) {
         <div className="fld only-m"><label className="f">Sort by</label>
           <select className="sel" value={get('sort') || 'featured'} onChange={(e) => set('sort', e.target.value === 'featured' ? '' : e.target.value)}>{SORTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
         <div className="fld"><label className="f">Category</label>
-          <select className="sel" value={get('cat')} onChange={(e) => set('cat', e.target.value)}><option value="">All categories</option>{categories.map((c) => <option key={c.name}>{c.name}</option>)}</select></div>
+          <select className="sel" value={get('cat')} onChange={(e) => setMany({ cat: e.target.value, sub: '', grp: '' })}><option value="">All categories</option>{categories.map((c) => <option key={c.name}>{c.name}</option>)}</select></div>
+        {subs.length > 0 && (
+          <div className="fld"><label className="f">Type</label>
+            <select className="sel" value={typeValue} onChange={(e) => { const [k, ...r] = e.target.value.split(':'); const v = r.join(':'); setMany({ sub: k === 'sub' ? v : '', grp: k === 'grp' ? v : '' }); }}>
+              <option value="">{`All ${get('cat')}`}</option>
+              {subs.filter((s) => !s.group).map((s) => <option key={s.name} value={`sub:${s.name}`}>{s.name}</option>)}
+              {groups.map((g) => (
+                <optgroup key={g} label={g}>
+                  <option value={`grp:${g}`}>{`All ${g}`}</option>
+                  {subs.filter((s) => s.group === g).map((s) => <option key={s.name} value={`sub:${s.name}`}>{s.name}</option>)}
+                </optgroup>
+              ))}
+            </select></div>
+        )}
         <div className="fld"><label className="f">Brand</label>
           <select className="sel" value={get('brand')} onChange={(e) => set('brand', e.target.value)}><option value="">All brands</option>{brands.map((b) => <option key={b.name}>{b.name}</option>)}</select></div>
         <div className="fld"><label className="f">Price</label>
