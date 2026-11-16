@@ -25,6 +25,6 @@ export async function POST(req) {
     return NextResponse.json({ ok: true, refund: r.refund, email: r.email });
   } catch (e) {
     console.error('after-cancel step failed', b.order_id, e?.message || e);
-    return NextResponse.json({ ok: true, refund: 'pending', email: 'failed' });
+    return NextResponse.json({ ok: true, refund: 'review', email: 'failed' });
   }
 }

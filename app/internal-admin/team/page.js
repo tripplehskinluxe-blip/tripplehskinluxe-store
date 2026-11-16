@@ -35,6 +35,7 @@ function Inner() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [adding, setAdding] = useState(false);
+  const [canRef, setCanRef] = useState(false);   // may this new person approve refunds?
   const [canProd, setCanProd] = useState(false);   // may this new person add and edit products?
   const [card, setCard] = useState(null);          // the login details just created, shown once so they can be handed over
   const [resetFor, setResetFor] = useState(null);  // staff id whose password is being reset
@@ -57,11 +58,17 @@ function Inner() {
   async function add(e) {
     e.preventDefault(); setBusy(true); setErr('');
     const password = pw, em = email.trim();
-    const { ok, d } = await call({ action: 'create', email: em, password, can_manage_products: canProd });
+    const { ok, d } = await call({ action: 'create', email: em, password, can_manage_products: canProd, can_approve_refunds: canRef });
     setBusy(false);
     if (!ok) { setErr(d.error || 'Could not create the account.'); return; }
-    setCard({ email: d.email, password, kind: 'new' }); setEmail(''); setPw(''); setCanProd(false); setAdding(false); load();
+    setCard({ email: d.email, password, kind: 'new' }); setEmail(''); setPw(''); setCanProd(false); setCanRef(false); setAdding(false); load();
     if (d.warning) toast(d.warning);
+  }
+
+  async function toggleRefunds(row) {
+    setErr(''); const { ok, d } = await call({ action: 'set_refunds', user_id: row.id, allowed: !row.can_approve_refunds });
+    if (!ok) { setErr(d.error || 'Could not change that.'); return; }
+    toast(row.can_approve_refunds ? 'Refund approval turned off' : 'Refund approval turned on'); load();
   }
 
   async function toggleProducts(row) {
@@ -118,6 +125,7 @@ function Inner() {
           <div className="fld"><label className="f" htmlFor="tm_email">Their email</label><input id="tm_email" className="inp" type="email" autoComplete="off" maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
           <PasswordField id="tm_pw" value={pw} onChange={setPw} />
           <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', margin: '14px 0' }}><input type="checkbox" checked={canProd} onChange={(e) => setCanProd(e.target.checked)} style={{ marginTop: 4 }} /><span><b>Can add and edit products</b><br /><span className="sm mut">They can add products, change prices, stock and photos, and archive items. They can never delete, import files or change settings. You can turn this off at any time.</span></span></label>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', margin: '14px 0' }}><input type="checkbox" checked={canRef} onChange={(e) => setCanRef(e.target.checked)} style={{ marginTop: 4 }} /><span><b>Can approve refunds</b><br /><span className="sm mut">They can approve or decline refunds for cancelled, paid orders (never their own cancellations). Off unless you switch it on; you can turn it off at any time.</span></span></label>
           {err && <span className="err" style={{ display: 'block', margin: '8px 0' }}>{err}</span>}
           <button className="btn" disabled={busy || !email || !pw}>{busy ? 'Please wait…' : 'Create staff account'}</button>
         </form>
@@ -127,12 +135,13 @@ function Inner() {
       <div className="pnl">
         <h3>Current team</h3>
         {!rows ? <p className="mut">Loading…</p> : (
-          <div className="tw"><table className="t"><thead><tr><th>Email</th><th>Role</th><th>Edits products</th><th>Last sign-in</th><th /></tr></thead><tbody>
+          <div className="tw"><table className="t"><thead><tr><th>Email</th><th>Role</th><th>Edits products</th><th>Approves refunds</th><th>Last sign-in</th><th /></tr></thead><tbody>
             {rows.map((r) => (
               <tr key={r.id}>
                 <td>{r.email}</td>
                 <td>{r.role === 'admin' ? 'Admin' : 'Staff'}</td>
                 <td>{r.role === 'admin' ? <span className="sm mut">Always</span> : <label style={{ display: 'flex', gap: 8, alignItems: 'center', cursor: 'pointer' }}><input type="checkbox" checked={!!r.can_manage_products} onChange={() => toggleProducts(r)} /> {r.can_manage_products ? 'On' : 'Off'}</label>}</td>
+                <td>{r.role === "admin" ? <span className="sm mut">Always</span> : <label style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}><input type="checkbox" checked={!!r.can_approve_refunds} onChange={() => toggleRefunds(r)} /> {r.can_approve_refunds ? "On" : "Off"}</label>}</td>
                 <td>{r.last_sign_in_at ? fmtDate(r.last_sign_in_at) : 'Never'}</td>
                 <td style={{ textAlign: 'right' }}>
                   {r.role === 'admin' ? <span className="sm mut">Managed in the database</span> : resetFor === r.id ? (

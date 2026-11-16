@@ -1,8 +1,8 @@
 import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { customerCanCancel, refundOrder, finishCancellation, sendRefundEmailOnce } from '../lib/cancellation.js';
+import { customerCanCancel, refundOrder, finishCancellation, sendRefundEmailOnce, approveRefund, declineRefund } from '../lib/cancellation.js';
 import { createPaystackRefund } from '../lib/refund.js';
-import { cancellationEmail, refundEmail } from '../lib/email.js';
+import { cancellationEmail, refundEmail, refundDeclinedEmail } from '../lib/email.js';
 import { handlePaystackWebhook } from '../lib/settlement.js';
 import { buildSettings } from '../lib/settings-core.js';
 
@@ -57,21 +57,67 @@ test('refundOrder: claims first, sends the exact amount, records the answer; eve
   assert.equal((await refundOrder(fakeDb({ rpc: { refund_claim: { error: { message: 'db down' } } } }), 'o1')).state, 'failed');
 });
 
-test('finishCancellation: paid order, refund accepted -> ONE email that says the refund was issued', async () => {
-  const db = fakeDb({ rpc: { refund_claim: { data: { claimed: true, reference: REF, amount_kobo: 1200000, order_number: 'ONL-2026-1001' } }, claim_order_email: { data: true } } });
-  const mail = fakeMail();
-  const r = await finishCancellation(db, 'o1', { mail, secret: 'sk', deps: { refund: async () => ({ ok: true, id: '1' }) } });
-  assert.deepEqual(r, { refund: 'issued', email: 'sent' });
-  assert.equal(mail.sent.length, 1); assert.match(mail.sent[0].text, /issued a refund of/); assert.match(mail.sent[0].text, /3 to 7 working days/); assert.equal(mail.sent[0].to, 'ada@example.com');
-  assert.ok(db.calls.some(([n, a]) => n === 'claim_order_email' && a.p_kind === 'refund_issued'), 'the separate refund email is marked as already covered');
+const PAID = { ...ORDER, status: "cancelled", channel: "online", payment_status: "paid" };
+const claimOk = { claim_order_email: { data: true, error: null } };
+
+test("finishCancellation: a PAID order is never refunded by itself; ONE email says the refund is with our team", async () => {
+  const db = fakeDb({ order: PAID, rpc: claimOk }); const mail = fakeMail();
+  assert.deepEqual(await finishCancellation(db, "o1", { mail }), { refund: "review", email: "sent" });
+  assert.ok(!db.calls.some(([n]) => n === "refund_claim" || n === "refund_result"), "no refund may be claimed or sent");
+  assert.equal(mail.sent.length, 1); assert.match(mail.sent[0].text, /with our team for approval/i); assert.doesNotMatch(mail.sent[0].text, /issued a refund|refunding all of it/i);
 });
 
-test('finishCancellation: refund refused -> the email does NOT claim a refund was issued, and staff are left to retry', async () => {
-  const db = fakeDb({ rpc: { refund_claim: { data: { claimed: true, reference: REF, amount_kobo: 1, order_number: 'X' } }, claim_order_email: { data: true } } });
-  const mail = fakeMail();
-  const r = await finishCancellation(db, 'o1', { mail, deps: { refund: async () => ({ ok: false, error: 'down' }) } });
-  assert.equal(r.refund, 'pending'); assert.doesNotMatch(mail.sent[0].text, /issued a refund/); assert.match(mail.sent[0].text, /refunding all of it/);
-  assert.ok(!db.calls.some(([n, a]) => n === 'claim_order_email' && a.p_kind === 'refund_issued'));
+test("refundOrder: an unapproved or declined refund is never sent to Paystack, even when forced by hand", async () => {
+  for (const [status, state] of [["awaiting_approval", "awaiting"], ["declined", "declined"]]) {
+    let called = false;
+    const db = fakeDb({ rpc: { refund_claim: { data: { claimed: false, reason: "already", status }, error: null } } });
+    const r = await refundOrder(db, "o1", { manual: true, actor: "u1", deps: { refund: async () => { called = true; return { ok: true }; } } });
+    assert.equal(r.state, state); assert.equal(called, false);
+    assert.deepEqual(db.calls[0], ["refund_claim", { p_order: "o1", p_manual: true, p_actor: "u1" }]);
+  }
+});
+
+const asUserWith = (result) => { const calls = []; return { calls, rpc: async (n, a) => { calls.push([n, a]); return typeof result === "function" ? result(n, a) : result; } }; };
+const CLAIM = { claimed: true, reference: "ths_x", amount_kobo: 1200000, order_number: "ONL-2026-1001" };
+
+test("approveRefund: the database approves as the signed-in person, THEN Paystack is asked once for the exact amount, THEN the customer is told", async () => {
+  const db = fakeDb({ order: { ...PAID, payment_status: "refunded" }, rpc: { refund_claim: { data: CLAIM, error: null }, ...claimOk } });
+  const user = asUserWith({ data: { code: "ok" }, error: null }); const mail = fakeMail(); const sent = [];
+  const r = await approveRefund(user, db, "o1", { mail, deps: { refund: async (x) => { sent.push(x); return { ok: true, id: "7" }; } } });
+  assert.deepEqual(r, { ok: true, refund: "issued", error: undefined, email: "sent" });
+  assert.deepEqual(user.calls, [["approve_refund", { p_order: "o1" }]]);
+  assert.equal(sent.length, 1); assert.equal(sent[0].amountKobo, 1200000); assert.equal(sent[0].reference, "ths_x");
+  assert.match(mail.sent[0].subject, /refund .* has been issued/i);
+});
+
+test("approveRefund: if the person may not approve (or it is not waiting), nothing is claimed and Paystack is never called", async () => {
+  for (const [res, code] of [[{ data: null, error: { code: "42501", message: "forbidden" } }, "forbidden"], [{ data: { code: "not_awaiting" }, error: null }, "not_awaiting"], [{ data: { code: "not_refundable" }, error: null }, "not_refundable"]]) {
+    let called = false; const db = fakeDb({ rpc: { refund_claim: { data: CLAIM, error: null } } });
+    const r = await approveRefund(asUserWith(res), db, "o1", { mail: fakeMail(), deps: { refund: async () => { called = true; return { ok: true }; } } });
+    assert.equal(r.ok, false); assert.equal(r.code, code); assert.equal(called, false); assert.ok(!db.calls.some(([n]) => n === "refund_claim"));
+  }
+});
+
+test("approveRefund: approved but Paystack refuses -> reported as failed, no refund-issued email, and it can be retried", async () => {
+  const db = fakeDb({ order: { ...PAID, payment_status: "paid" }, rpc: { refund_claim: { data: CLAIM, error: null }, ...claimOk } }); const mail = fakeMail();
+  const r = await approveRefund(asUserWith({ data: { code: "ok" }, error: null }), db, "o1", { mail, deps: { refund: async () => ({ ok: false, error: "Insufficient balance" }) } });
+  assert.deepEqual([r.ok, r.refund, r.email, r.error], [true, "failed", "skipped", "Insufficient balance"]); assert.equal(mail.sent.length, 0);
+});
+
+test("declineRefund: the customer is told once (order still active); a person without permission changes nothing and nobody is emailed", async () => {
+  const db = fakeDb({ order: PAID, rpc: claimOk }); const mail = fakeMail();
+  const r = await declineRefund(asUserWith({ data: { code: "ok", reinstated: true }, error: null }), db, "o1", "already dispatched", { mail });
+  assert.deepEqual([r.ok, r.reinstated, r.email], [true, true, "sent"]); assert.match(mail.sent[0].text, /not able to cancel/i); assert.match(mail.sent[0].text, /stays active/i);
+  assert.ok(!db.calls.some(([n]) => n === "refund_claim"));
+  const m2 = fakeMail(); const d2 = fakeDb({ order: PAID, rpc: claimOk });
+  const bad = await declineRefund(asUserWith({ data: null, error: { code: "42501", message: "forbidden" } }), d2, "o1", "", { mail: m2 });
+  assert.deepEqual([bad.ok, bad.code, m2.sent.length], [false, "forbidden", 0]);
+});
+
+test("emails: the cancellation wording for a refund under review, and the declined emails (names escaped)", () => {
+  const review = cancellationEmail({ ...PAID }, "review", S); assert.match(review.text, /with our team for approval/i); assert.doesNotMatch(review.text, /We have issued|refunding all of it/);
+  const evil = { ...PAID, customer_name: "<b>Ada</b>" };
+  for (const back of [true, false]) { const m = refundDeclinedEmail(evil, back, S); assert.doesNotMatch(m.html, /<b>Ada<\/b>/); assert.match(m.subject, back ? /still active/i : /About your refund/i); }
 });
 
 test('finishCancellation: unpaid order, in-store order, already-sent email, email outage, email not set up', async () => {

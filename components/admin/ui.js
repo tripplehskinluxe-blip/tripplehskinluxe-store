@@ -50,6 +50,13 @@ export function ProductsAccess({ children }) {
   return children;
 }
 
+// Refund approvals: the owner, or a staff member the owner has authorised. (The database enforces it either way.)
+export function RefundsAccess({ children }) {
+  const { canRefunds } = useAdmin();
+  if (!canRefunds) return <div className="box"><h3 style={{ marginBottom: 8 }}>Refund approval needed</h3><p className="mut">Ask the owner to allow you to approve refunds. You can still see on each order whether its refund is waiting.</p></div>;
+  return children;
+}
+
 export function AdminOnly({ children }) {
   const { role } = useAdmin();
   if (role !== 'admin') return <div className="box"><h3 style={{ marginBottom: 8 }}>Admin access needed</h3><p className="mut">This page is for the owner account. Staff can use Orders, In-store sales, Inventory and Customers.</p></div>;

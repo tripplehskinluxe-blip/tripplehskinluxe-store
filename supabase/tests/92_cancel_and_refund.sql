@@ -32,7 +32,7 @@ select public.set_order_status(pg_temp.oid('ths_a1'), 'cancelled');
 reset role;
 select pg_temp.expect('cancelling puts the stock back', pg_temp.stock(), '50');
 select pg_temp.expect('the order is cancelled by staff', pg_temp.col('ths_a1','status') || ' / ' || pg_temp.col('ths_a1','cancelled_by'), 'cancelled / staff');
-select pg_temp.expect('a paid order gets one refund ticket for the full total', (select amount_ngn::text || '/' || status from public.order_refunds where order_id = pg_temp.oid('ths_a1')), '12000/requested');
+select pg_temp.expect('a paid order gets one refund ticket for the full total, waiting for approval', (select amount_ngn::text || '/' || status from public.order_refunds where order_id = pg_temp.oid('ths_a1')), '12000/awaiting_approval');
 select pg_temp.as_('00000000-0000-0000-0000-0000000000b1','aal2'); set role authenticated;
 select public.set_order_status(pg_temp.oid('ths_a1'), 'cancelled');
 reset role;
@@ -57,10 +57,10 @@ select pg_temp.expect('an unknown order number looks the same', public.customer_
 select pg_temp.expect('...and the order is untouched', pg_temp.col('ths_c1','status'), 'processing');
 select pg_temp.expect('the right phone, written differently, cancels it', public.customer_cancel_order((select order_number from public.orders where paystack_reference='ths_c1'), '0801 234 5678', 'changed my mind') ->> 'code', 'ok');
 select pg_temp.expect('the order shows who cancelled and why', pg_temp.col('ths_c1','cancelled_by') || ' / ' || pg_temp.col('ths_c1','cancel_reason'), 'customer / changed my mind');
-select pg_temp.expect('the stock is back', pg_temp.stock(), '50');
-select pg_temp.expect('a paid customer cancel creates the refund ticket', (select status from public.order_refunds where order_id = pg_temp.oid('ths_c1')), 'requested');
+select pg_temp.expect('a PAID customer cancel keeps the stock reserved until the refund is approved', pg_temp.stock(), '49');
+select pg_temp.expect('a paid customer cancel creates a refund ticket that waits for approval', (select status from public.order_refunds where order_id = pg_temp.oid('ths_c1')), 'awaiting_approval');
 select pg_temp.expect('cancelling again is harmless ("already")', (public.customer_cancel_order((select order_number from public.orders where paystack_reference='ths_c1'), '08012345678') ->> 'already'), 'true');
-select pg_temp.expect('...and the stock does not move again', pg_temp.stock(), '50');
+select pg_temp.expect('...and the stock does not move again', pg_temp.stock(), '49');
 
 select pg_temp.mk('ths_c2'); select pg_temp.pay('ths_c2');
 update public.orders set status = 'shipped' where paystack_reference = 'ths_c2';
@@ -77,9 +77,13 @@ update public.orders set status = 'processing' where paystack_reference = 'ths_c
 select pg_temp.expect('a pickup order still being prepared can', public.customer_cancel_order((select order_number from public.orders where paystack_reference='ths_c4'), '08012345678') ->> 'code', 'ok');
 select pg_temp.mk('ths_c5');
 select pg_temp.expect('an unpaid order can be cancelled by its customer', public.customer_cancel_order((select order_number from public.orders where paystack_reference='ths_c5'), '08012345678') ->> 'code', 'ok');
-select pg_temp.expect('...with no refund ticket and no stock change', (select count(*)::text from public.order_refunds where order_id = pg_temp.oid('ths_c5')) || ' / ' || pg_temp.stock(), '0 / 49');
+select pg_temp.expect('...with no refund ticket and no stock change', (select count(*)::text from public.order_refunds where order_id = pg_temp.oid('ths_c5')) || ' / ' || pg_temp.stock(), '0 / 46');
 
 \echo --- THE REFUND, STEP BY STEP
+select pg_temp.expect('an UNAPPROVED refund cannot be claimed, however it is asked', (public.refund_claim(pg_temp.oid('ths_a1'), true) ->> 'claimed') || '/' || (public.refund_claim(pg_temp.oid('ths_a1'), true) ->> 'status'), 'false/awaiting_approval');
+select pg_temp.as_('00000000-0000-0000-0000-0000000000a1','aal2'); set role authenticated;
+select public.approve_refund(pg_temp.oid('ths_a1'));
+reset role;
 select pg_temp.expect('a cancelled paid order can be claimed for refunding', (public.refund_claim(pg_temp.oid('ths_a1')) ->> 'claimed'), 'true');
 select pg_temp.expect('the claim carries the exact amount in kobo', (select (public.refund_claim(pg_temp.oid('ths_a1')) ->> 'reason')), 'already');
 select pg_temp.expect('a second claim while one is in flight is refused', (select status from public.order_refunds where order_id = pg_temp.oid('ths_a1')), 'processing');
@@ -93,6 +97,9 @@ select pg_temp.expect('a paid order that is NOT cancelled cannot be claimed', (p
 select pg_temp.expect('an unpaid cancelled order cannot be claimed', (public.refund_claim(pg_temp.oid('ths_c5')) ->> 'reason'), 'not_refundable');
 
 \echo --- WHEN PAYSTACK SAYS NO
+select pg_temp.as_('00000000-0000-0000-0000-0000000000a1','aal2'); set role authenticated;
+select public.approve_refund(pg_temp.oid('ths_c1'));
+reset role;
 select pg_temp.expect('the customer-cancelled order is claimed', (public.refund_claim(pg_temp.oid('ths_c1')) ->> 'claimed'), 'true');
 select public.refund_result(pg_temp.oid('ths_c1'), false, null, 'Insufficient balance');
 select pg_temp.expect('a failed attempt is recorded and flagged for a person', (select status || ' / ' || error from public.order_refunds where order_id = pg_temp.oid('ths_c1')) || ' / ' || pg_temp.col('ths_c1','needs_attention') || ' / ' || pg_temp.col('ths_c1','payment_status'), 'failed / Insufficient balance / true / paid');

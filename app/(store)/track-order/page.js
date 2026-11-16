@@ -31,7 +31,7 @@ export default function TrackOrder() {
     try {
       const r = await fetch('/api/orders/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order_number: res.order_number, phone }) });
       const d = await r.json().catch(() => ({}));
-      if (r.ok) { setRes({ ...res, status: 'cancelled', can_cancel: false, refund: d.refund === 'issued' ? 'issued' : d.refund === 'pending' ? 'pending' : null }); setConfirming(false); }
+      if (r.ok) { setRes({ ...res, status: 'cancelled', can_cancel: false, refund: d.refund === 'issued' ? 'issued' : d.refund === 'pending' ? 'pending' : d.refund === 'review' ? 'review' : null }); setConfirming(false); }
       else setCancelMsg(d.error || 'We could not cancel this order. Please message us on WhatsApp.');
     } catch { setCancelMsg('Network error. Please try again.'); }
     setCancelBusy(false);
@@ -54,7 +54,7 @@ export default function TrackOrder() {
             <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <div><b style={{ fontSize: 18 }}>{res.order_number}</b><br /><span className="mut sm">Placed {fmtDate(res.created_at)} · {naira(res.total)}</span></div>
             </div>
-            {res.status === 'cancelled' ? <div className="alert" style={{ marginTop: 16 }}>This order was cancelled.{res.refund === 'issued' && ' Your refund has been issued. It usually reaches you within 3 to 7 working days, depending on your bank.'}{res.refund === 'pending' && ' Your refund is being processed, and we will email you once it has been issued.'} Contact us on WhatsApp if you need help.</div> : (
+            {res.status === 'cancelled' ? <div className="alert" style={{ marginTop: 16 }}>This order was cancelled.{res.refund === 'review' && ' Your refund is with our team for approval. We will email you as soon as a decision has been made.'}{res.refund === 'issued' && ' Your refund has been issued. It usually reaches you within 3 to 7 working days, depending on your bank.'}{res.refund === 'pending' && ' Your refund is being processed, and we will email you once it has been issued.'} Contact us on WhatsApp if you need help.</div> : (
               <div className="tl">
                 {steps.map(([k, label], i) => (
                   <div key={k} className={`st ${i <= cur ? 'done' : ''} ${i === cur ? 'cur' : ''}`}><i>{i <= cur && <Icon n="check" s={15} />}</i><span>{label}</span></div>
@@ -69,7 +69,7 @@ export default function TrackOrder() {
               <div style={{ marginTop: 18 }}>
                 {!confirming ? <button className="btn ghost s" onClick={() => setConfirming(true)}>Cancel this order</button> : (
                   <div className="alert" style={{ display: 'block' }}>
-                    <b>Cancel this order?</b> This cannot be undone.{res.paid && ' Because you have paid, we will refund the full amount to your original payment method.'}
+                    <b>Cancel this order?</b> This cannot be undone.{res.paid && ' Because you have paid, our team will review your refund first and, once approved, send it to your original payment method.'}
                     <div style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
                       <button className="btn s" disabled={cancelBusy} onClick={cancelOrder}>{cancelBusy ? 'Cancelling…' : 'Yes, cancel my order'}</button>
                       <button className="btn ghost s" onClick={() => setConfirming(false)}>No, keep it</button>

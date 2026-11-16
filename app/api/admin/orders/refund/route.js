@@ -18,12 +18,12 @@ export async function POST(req) {
   const b = await req.json().catch(() => ({}));
   if (!UUID.test(b.order_id)) return NextResponse.json({ error: 'Invalid order' }, { status: 400 });
   const db = supabaseAdmin();
-  const r = await refundOrder(db, b.order_id, { manual: true });
+  const r = await refundOrder(db, b.order_id, { manual: true, actor: auth.user.id });
   if (r.state === 'issued') {
     let email = 'failed';
     try { email = await sendRefundEmailOnce(db, b.order_id); } catch (e) { console.error('refund email failed', e?.message || e); }
     return NextResponse.json({ ok: true, refund: 'issued', email });
   }
-  const error = r.state === 'busy' ? 'A refund request is already in progress. Check again in a minute.' : r.state === 'none' ? 'This order has nothing to refund.' : `The refund did not go through${r.error ? `: ${r.error}` : ''}`;
+  const error = r.state === 'busy' ? 'A refund request is already in progress. Check again in a minute.' : r.state === 'awaiting' ? 'This refund is waiting for approval. Someone with the refund-approval permission has to approve it first (see Refunds).' : r.state === 'declined' ? 'This refund was declined.' : r.state === 'none' ? 'This order has nothing to refund.' : `The refund did not go through${r.error ? `: ${r.error}` : ''}`;
   return NextResponse.json({ ok: false, refund: r.state, error }, { status: 409 });
 }

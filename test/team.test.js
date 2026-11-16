@@ -139,3 +139,20 @@ test('team: set_products takes only a real on/off for a real person id, and the 
   assert.equal((await run(mk({ rpc: () => ({ error: { message: 'forbidden', code: '42501' } }) }), { action: 'set_products', user_id: ID, allowed: true })).status, 403);
   assert.equal((await run(mk({ rpc: () => ({ error: { message: 'that person is not a staff member' } }) }), { action: 'set_products', user_id: ID, allowed: true })).status, 409);
 });
+
+test("team: create can authorise refund approval, only with a real true; a failure there leaves a safe plain staff account", async () => {
+  const on = mk(); const r = await run(on, { action: "create", email: "till@shop.com", password: PW, can_approve_refunds: true });
+  assert.equal(r.status, 200); assert.deepEqual(on.names(), ["createUser", "team_set_role", "team_set_refunds"]); assert.deepEqual(on.log[2][2], { p_user: ID, p_can: true });
+  for (const v of [false, "true", 1, undefined]) { const m = mk(); await run(m, { action: "create", email: "till@shop.com", password: PW, can_approve_refunds: v }); assert.deepEqual(m.names(), ["createUser", "team_set_role"], `value ${String(v)} must not switch anything on`); }
+  const bad = mk({ rpc: (name) => (name === "team_set_refunds" ? { error: { message: "boom" } } : { error: null }) });
+  const w = await run(bad, { action: "create", email: "till@shop.com", password: PW, can_approve_refunds: true });
+  assert.equal(w.status, 200); assert.match(w.body.warning, /refund approval could not be switched on/); assert.ok(!bad.names().includes("deleteUser"));
+});
+
+test("team: set_refunds takes only a real on/off for a real person id, and the database has the last word", async () => {
+  const m = mk(); const r = await run(m, { action: "set_refunds", user_id: ID, allowed: true });
+  assert.equal(r.status, 200); assert.deepEqual(m.log[0], ["rpc", "team_set_refunds", { p_user: ID, p_can: true }]);
+  for (const allowed of ["yes", 1, null, undefined]) { const x = mk(); assert.equal((await run(x, { action: "set_refunds", user_id: ID, allowed })).status, 400); assert.equal(x.log.length, 0); }
+  const y = mk(); assert.equal((await run(y, { action: "set_refunds", user_id: "nope", allowed: true })).status, 400); assert.equal(y.log.length, 0);
+  assert.equal((await run(mk({ rpc: () => ({ error: { message: "forbidden", code: "42501" } }) }), { action: "set_refunds", user_id: ID, allowed: true })).status, 403);
+});

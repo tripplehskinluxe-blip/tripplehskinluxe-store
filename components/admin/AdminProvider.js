@@ -12,7 +12,7 @@ export const useAdmin = () => useContext(Ctx);
 export const ADMIN_BASE = '/' + (process.env.NEXT_PUBLIC_ADMIN_PATH || '').replace(/^\/+|\/+$/g, '');
 const IDLE_MS = 30 * 60 * 1000; // sign out after 30 minutes of no activity
 // 4th value = admin-only (staff don't see it; the database enforces this too)
-const NAV = [['', 'Dashboard', 'grid'], ['/orders', 'Orders', 'box'], ['/pos', 'In-store sales', 'bag'], ['/products', 'Products', 'tag', true], ['/categories', 'Categories', 'layers', true], ['/inventory', 'Inventory', 'box'], ['/customers', 'Customers', 'users'], ['/discounts', 'Discounts', 'tag', true], ['/reviews', 'Reviews', 'star', true], ['/team', 'Team', 'users', true], ['/settings', 'Settings', 'grid', true], ['/pages', 'Legal pages', 'shield', true], ['/analytics', 'Analytics', 'chart', true]];
+const NAV = [['', 'Dashboard', 'grid'], ['/orders', 'Orders', 'box'], ['/refunds', 'Refunds', 'shield', true], ['/pos', 'In-store sales', 'bag'], ['/products', 'Products', 'tag', true], ['/categories', 'Categories', 'layers', true], ['/inventory', 'Inventory', 'box'], ['/customers', 'Customers', 'users'], ['/discounts', 'Discounts', 'tag', true], ['/reviews', 'Reviews', 'star', true], ['/team', 'Team', 'users', true], ['/settings', 'Settings', 'grid', true], ['/pages', 'Legal pages', 'shield', true], ['/analytics', 'Analytics', 'chart', true]];
 
 const Center = ({ children }) => (
   <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f8f5fc', padding: 20 }}>
@@ -143,10 +143,12 @@ export default function AdminProvider({ children }) {
     if (error) { setPending(null); return setS({ phase: 'signin', notice: 'Could not start your session. Please sign in again.' }); }
     let canProducts = d.role === 'admin';
     if (!canProducts) { try { const { data } = await sb.rpc('can_edit_products'); canProducts = data === true; } catch { canProducts = false; } }
+    let canRefunds = d.role === 'admin';
+    if (!canRefunds) { try { const { data } = await sb.rpc('can_approve_refunds'); canRefunds = data === true; } catch { canRefunds = false; } }
     // IMPORTANT: clear the held sign-in details and switch screens in the SAME step. If an "await" sits between the two, the page
     // draws once with no sign-in details while still on the code screen, and crashes.
     setPending(null);
-    setS({ phase: 'ready', role: d.role, name: d.name, canProducts });
+    setS({ phase: 'ready', role: d.role, name: d.name, canProducts, canRefunds });
   }, [sb]);
 
   useEffect(() => {
@@ -175,11 +177,11 @@ export default function AdminProvider({ children }) {
   const token = async () => (await sb.auth.getSession()).data.session?.access_token;
   const active = (p) => (p === '' ? path === ADMIN_BASE || path === ADMIN_BASE + '/' : path.startsWith(ADMIN_BASE + p));
   return (
-    <Ctx.Provider value={{ sb, toast, role: s.role, canProducts: !!s.canProducts, token, base: ADMIN_BASE }}>
+    <Ctx.Provider value={{ sb, toast, role: s.role, canProducts: !!s.canProducts, canRefunds: !!s.canRefunds, token, base: ADMIN_BASE }}>
       <div className="adm">
         <aside className={`side ${menu ? 'open' : ''}`}>
           <Logo store={store} href={ADMIN_BASE} size={42} label="Team" />
-          {NAV.filter((n) => !n[3] || s.role === 'admin' || (n[1] === 'Products' && s.canProducts)).map(([p, label, icon]) => <Link key={label} href={ADMIN_BASE + p} className={active(p) ? 'on' : ''}><Icon n={icon} s={18} />{label}</Link>)}
+          {NAV.filter((n) => !n[3] || s.role === 'admin' || (n[1] === 'Products' && s.canProducts) || (n[1] === 'Refunds' && s.canRefunds)).map(([p, label, icon]) => <Link key={label} href={ADMIN_BASE + p} className={active(p) ? 'on' : ''}><Icon n={icon} s={18} />{label}</Link>)}
           <Link href="/" style={{ marginTop: 20, borderTop: '1px solid var(--line)', borderRadius: 0, paddingTop: 18 }}><Icon n="out" s={18} />View storefront</Link>
         </aside>
         <div className="adm-main">

@@ -39,7 +39,7 @@ export async function POST(req) {
   if (data?.code === 'not_cancellable') return NextResponse.json({ error: 'This order can no longer be cancelled online. Please message us on WhatsApp and we will help.' }, { status: 409 });
 
   // Cancelled. Now refund (paid orders) and email the customer. If either step fails the order stays cancelled and staff see it.
-  let refund = data.paid ? 'pending' : 'none';
+  let refund = data.paid ? 'review' : 'none';
   try { refund = (await finishCancellation(db, data.order_id)).refund; } catch (e) { console.error('after-cancel step failed', num, e?.message || e); }
   return NextResponse.json({ ok: true, already: !!data.already, refund });
 }

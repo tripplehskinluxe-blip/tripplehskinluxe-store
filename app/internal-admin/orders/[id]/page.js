@@ -8,14 +8,14 @@ import { naira, fmtDate } from '@/lib/format.js';
 
 export default function OrderDetail() {
   const { id } = useParams();
-  const { sb, base, toast, token, role } = useAdmin();
+  const { sb, base, toast, token, role, canRefunds } = useAdmin();
   const [o, setO] = useState(null);
   const [items, setItems] = useState([]);
   const [missing, setMissing] = useState(false);
   const [refund, setRefund] = useState(null);
 
   const load = useCallback(async () => {
-    const [a, b, c] = await Promise.all([sb.from('orders').select('*').eq('id', id).maybeSingle(), sb.from('order_items').select('id,name,qty,unit_price_ngn').eq('order_id', id), sb.from('order_refunds').select('status,error,attempts').eq('order_id', id).maybeSingle()]);
+    const [a, b, c] = await Promise.all([sb.from('orders').select('*').eq('id', id).maybeSingle(), sb.from('order_items').select('id,name,qty,unit_price_ngn').eq('order_id', id), sb.from('order_refunds').select('status,error,attempts,decision_note').eq('order_id', id).maybeSingle()]);
     if (!a.data) { setMissing(true); return; }
     setO(a.data); setItems(b.data || []); setRefund(c.data || null);
   }, [sb, id]);
@@ -23,12 +23,12 @@ export default function OrderDetail() {
 
   async function setStatus(v) {
     if (v === 'cancelled') {
-      if (!confirm('Cancel this order? Stock is put back, the customer is emailed, and a paid online order is refunded automatically through Paystack.')) return;
+      if (!confirm('Cancel this order? Stock is put back and the customer is emailed. If the customer has paid, the refund waits for approval before any money is returned.')) return;
       try {
         const r = await fetch('/api/admin/orders/cancel', { method: 'POST', headers: { Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ order_id: id }) });
         const d = await r.json().catch(() => ({}));
         if (!r.ok) { toast(d.error || 'Could not cancel the order'); return; }
-        toast(d.refund === 'issued' ? 'Order cancelled · refund issued · customer emailed' : d.refund === 'pending' ? 'Order cancelled · the refund did not go through yet, see below' : 'Order cancelled');
+        toast(d.refund === 'issued' ? 'Order cancelled · refund issued · customer emailed' : d.refund === 'review' ? 'Order cancelled · the refund is waiting for approval' : d.refund === 'pending' ? 'Order cancelled · the refund did not go through yet, see below' : 'Order cancelled');
       } catch { toast('Could not cancel the order'); }
       load(); return;
     }
@@ -46,6 +46,25 @@ export default function OrderDetail() {
     }
   }
 
+  async function approveRefund() {
+    if (!confirm('Approve this refund? The full amount is sent back through Paystack to the customer\'s original payment method.')) return;
+    try {
+      const r = await fetch('/api/admin/refunds/approve', { method: 'POST', headers: { Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ order_id: id }) });
+      const d = await r.json().catch(() => ({}));
+      toast(r.ok && d.refund === 'issued' ? 'Refund approved and sent · customer emailed' : r.ok ? 'Refund approved, but Paystack did not accept it yet. See below.' : d.error || 'Could not approve the refund');
+    } catch { toast('Could not approve the refund'); }
+    load();
+  }
+  async function declineRefund() {
+    const note = window.prompt('Reason for declining (optional, kept on record):', '');
+    if (note === null) return;
+    try {
+      const r = await fetch('/api/admin/refunds/decline', { method: 'POST', headers: { Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ order_id: id, note }) });
+      const d = await r.json().catch(() => ({}));
+      toast(r.ok ? (d.reinstated ? 'Declined · the order is back where it was' : 'Declined') : d.error || 'Could not decline the refund');
+    } catch { toast('Could not decline the refund'); }
+    load();
+  }
   async function retryRefund() {
     try {
       const r = await fetch('/api/admin/orders/refund', { method: 'POST', headers: { Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ order_id: id }) });
@@ -76,17 +95,29 @@ export default function OrderDetail() {
       <PageHead title={o.order_number} sub={`${fmtDate(o.created_at)} · `}><Link className="btn ghost s" href={`${base}/orders`}>Back</Link></PageHead>
       {o.status === 'cancelled' && o.payment_status === 'paid' && (
         <div className="alert" style={{ display: 'block' }}>
-          <b>Refund due.</b> This order was cancelled after the customer paid {naira(o.total_ngn)}.
-          {o.channel === 'online' ? <>
-            {refund?.status === 'failed' && <><br />The automatic refund did not go through: {refund.error || 'unknown reason'}.</>}
-            {refund?.status === 'processing' && <><br />A refund request is in progress. Check again in a minute.</>}
+          {o.channel === 'online' && refund?.status === 'awaiting_approval' ? <>
+            <b>Refund waiting for approval.</b> {o.cancelled_by === 'customer' ? 'The customer cancelled after paying' : 'This order was cancelled after the customer paid'} {naira(o.total_ngn)}. No money is sent until it is approved.
+            {o.cancelled_by === 'customer' && <><br />Check the goods have not been dispatched or delivered before approving. If they have, decline: the order goes back to where it was.</>}
             <div style={{ marginTop: 10, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button className="btn s" onClick={retryRefund}>{refund?.status === 'failed' ? 'Retry refund' : 'Refund now'}</button>
-              {role === 'admin' ? <button className="btn ghost s" onClick={markRefunded}>Already refunded in Paystack? Mark as refunded</button> : <span className="sm">Refunded outside Paystack? Ask the shop owner to mark it.</span>}
+              {canRefunds ? <><button className="btn s" onClick={approveRefund}>Approve refund</button><button className="btn ghost s" onClick={declineRefund}>Decline</button></> : <span className="sm">Someone with the refund-approval permission has to approve this. Ask the shop owner.</span>}
             </div>
+          </> : o.channel === 'online' && refund?.status === 'declined' ? <>
+            <b>Refund declined.</b> {refund.decision_note ? `Reason: ${refund.decision_note}. ` : ''}No refund will be sent.
+            {role === 'admin' && <div style={{ marginTop: 10 }}><button className="btn ghost s" onClick={markRefunded}>Refunded outside Paystack? Mark as refunded</button></div>}
           </> : <>
-            {' '}Hand back the cash for this in-store sale, then record it here.
-            <div style={{ marginTop: 10 }}>{role === 'admin' ? <button className="btn s" onClick={markRefunded}>Mark as refunded</button> : <span className="sm">Ask the shop owner to refund this and mark it as refunded.</span>}</div>
+            <b>Refund due.</b> This order was cancelled after the customer paid {naira(o.total_ngn)}.
+            {o.channel === 'online' ? <>
+              {refund?.status === 'failed' && <><br />The refund did not go through: {refund.error || 'unknown reason'}.</>}
+              {refund?.status === 'requested' && <><br />The refund was approved but has not been sent yet.</>}
+              {refund?.status === 'processing' && <><br />A refund request is in progress. Check again in a minute.</>}
+              <div style={{ marginTop: 10, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button className="btn s" onClick={retryRefund}>{!refund ? 'Request refund' : 'Retry refund'}</button>
+                {role === 'admin' ? <button className="btn ghost s" onClick={markRefunded}>Already refunded in Paystack? Mark as refunded</button> : <span className="sm">Refunded outside Paystack? Ask the shop owner to mark it.</span>}
+              </div>
+            </> : <>
+              {' '}Hand back the cash for this in-store sale, then record it here.
+              <div style={{ marginTop: 10 }}>{role === 'admin' ? <button className="btn s" onClick={markRefunded}>Mark as refunded</button> : <span className="sm">Ask the shop owner to refund this and mark it as refunded.</span>}</div>
+            </>}
           </>}
         </div>
       )}
