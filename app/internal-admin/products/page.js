@@ -36,7 +36,20 @@ function ProductForm({ p, cats, subs = [], onClose, onSaved }) {
   const toggleConcern = (k) => setF((s) => ({ ...s, concerns: s.concerns.includes(k) ? s.concerns.filter((x) => x !== k) : [...s.concerns, k] }));
 
   async function upload(e) {
-    const files = [...e.target.files].slice(0, 6); e.target.value = '';
+    const files = [...e.target.files]; e.target.value = '';
+    await uploadFiles(files);
+  }
+
+  // Photos from the file picker OR pasted from the clipboard (Ctrl+V). Same checks, same resize, same storage path.
+  function onPastePhotos(e) {
+    const files = [...(e.clipboardData?.items || [])].filter((i) => i.kind === 'file' && i.type.startsWith('image/')).map((i) => i.getAsFile()).filter(Boolean);
+    if (!files.length) return;
+    e.preventDefault();
+    if (!busy) uploadFiles(files);
+  }
+
+  async function uploadFiles(list) {
+    const files = [...list].slice(0, 6);
     if (!files.length) return;
     setBusy(true);
     const urls = [];
@@ -112,10 +125,10 @@ function ProductForm({ p, cats, subs = [], onClose, onSaved }) {
       {inp('short', 'Short description', { maxLength: 200 })}{area('desc', 'Description', 4)}{area('ing', 'Ingredients', 2)}{area('how', 'How to use', 2)}
       {inp('tags', 'Tags (comma separated)')}
       <div className="fld"><label className="f">Skin concerns</label><div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>{Object.entries(CONCERNS).map(([k, l]) => <label key={k} style={{ display: 'flex', gap: 6, fontSize: 14 }}><input type="checkbox" checked={f.concerns.includes(k)} onChange={() => toggleConcern(k)} />{l}</label>)}</div></div>
-      <div className="fld"><label className="f">Photos</label>
+      <div className="fld" onPaste={onPastePhotos}><label className="f">Photos</label>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>{f.images.map((u) => <div key={u} style={{ position: 'relative' }}><img src={u} alt="" width={64} height={64} style={{ objectFit: 'cover', borderRadius: 10 }} /><button type="button" aria-label="Remove photo" onClick={() => setF((s) => ({ ...s, images: s.images.filter((x) => x !== u) }))} style={{ position: 'absolute', top: -6, right: -6, background: '#fff', border: '1px solid var(--line)', borderRadius: 999, width: 22, height: 22 }}>×</button></div>)}</div>
         <input className="inp" type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={upload} disabled={busy} />
-        <p className="sm mut" style={{ marginTop: 6 }}>JPEG, PNG or WebP. Photos are resized automatically. With no photo, an illustrated placeholder is shown.</p></div>
+        <p className="sm mut" style={{ marginTop: 6 }}>JPEG, PNG or WebP. Photos are resized automatically. You can also copy a photo and press Ctrl+V here. With no photo, an illustrated placeholder is shown.</p></div>
       <label className="tog"><span>Featured</span><input type="checkbox" checked={f.feat} onChange={set('feat')} /></label>
       <label className="tog"><span>Best seller</span><input type="checkbox" checked={f.best} onChange={set('best')} /></label>
       <label className="tog"><span>New arrival</span><input type="checkbox" checked={f.isnew} onChange={set('isnew')} /></label>
