@@ -43,7 +43,7 @@ export default async function Shop({ searchParams }) {
           <Suspense fallback={null}><ShopFilters categories={categories} brands={brands} concerns={CONCERNS} subcategories={subcategories} /></Suspense>
           <div>
             <div className="bar">
-              <span className="mut">{o.q ? `${total} result${total === 1 ? '' : 's'} for “${o.q}”` : `${total} product${total === 1 ? '' : 's'}`}</span>
+              <span className="mut">{o.q ? `${total} result${total === 1 ? '' : 's'} for “${o.q}”` : null}</span>
               <div className="d-sort" style={{ display: 'flex', gap: 10, alignItems: 'center' }}><span className="sm mut">Sort</span><Suspense fallback={null}><SortSelect /></Suspense></div>
             </div>
             {loose && <p className="sm mut" style={{ marginBottom: 14 }}>No exact matches for “{o.q}”, so these are the closest matches.</p>}

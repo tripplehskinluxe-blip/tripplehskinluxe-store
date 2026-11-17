@@ -82,7 +82,7 @@ export default async function ProductPage({ params }) {
               ))}
             </div>
           </div>
-        ) : <p className="mut">No reviews yet. Bought this? Tell us what you think on WhatsApp and we&apos;ll add it.</p>}
+        ) : <p className="mut">Purchase this product to publish a review.</p>}
       </section>
 
       {rel.length > 0 && <section style={{ padding: '20px 0 70px' }}><h2 style={{ marginBottom: 28 }}>You may also like</h2><ProductGrid items={rel} /></section>}
