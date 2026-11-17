@@ -26,7 +26,7 @@ export default async function ProductPage({ params }) {
   const [rel, reviews] = await Promise.all([getRelated(p), getReviews(p)]);
 
   const low = p.stock > 0 && p.stock < 5;
-  const benefits = [...p.concerns.map((c) => `Targets ${labelOf(CONCERNS, c).toLowerCase()}`), 'Suitable for daily use', 'Authentic, carefully sourced'].slice(0, 4);
+  const benefits = p.benefits || [];
   const dist = [5, 4, 3, 2, 1].map((n) => (reviews.length ? Math.round((reviews.filter((r) => r.rating === n).length / reviews.length) * 100) : 0));
   const ld = {
     '@context': 'https://schema.org', '@type': 'Product', name: p.name, brand: { '@type': 'Brand', name: p.brand },
@@ -53,7 +53,7 @@ export default async function ProductPage({ params }) {
           <ProductBuy product={p} />
           <div className="acc">
             <details open><summary>Description</summary><div>{p.description}</div></details>
-            <details><summary>Key benefits</summary><ul>{benefits.map((b) => <li key={b}>{b}</li>)}</ul></details>
+            {benefits.length > 0 && <details><summary>Key benefits</summary><ul>{benefits.map((b) => <li key={b}>{b}</li>)}</ul></details>}
             {p.howToUse && <details><summary>How to use</summary><div>{p.howToUse}</div></details>}
             {p.ingredients && <details><summary>Ingredients</summary><div>{p.ingredients}</div></details>}
             <details><summary>Who it&apos;s for</summary><div>{p.skinType || 'Everyone'}{p.concerns.length ? `. Especially helpful for ${p.concerns.map((c) => labelOf(CONCERNS, c).toLowerCase()).join(', ')}.` : '.'}</div></details>

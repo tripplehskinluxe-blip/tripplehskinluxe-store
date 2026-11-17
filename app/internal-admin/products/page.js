@@ -9,7 +9,7 @@ import { naira } from '@/lib/format.js';
 
 const PAGE = 25;
 const CONCERNS = { acne: 'Acne & Breakouts', dry: 'Dry Skin', darkspots: 'Dark Spots', pigment: 'Hyperpigmentation', sensitive: 'Sensitive Skin', glow: 'Glow & Radiance' };
-const COLS = 'id,sku,name,brand,category_id,subcategory,price_ngn,old_price_ngn,stock,images,is_active,is_featured,is_best_seller,is_new,short_description,description,ingredients,how_to_use,tags,concerns,created_at,categories(name)';
+const COLS = 'id,sku,name,brand,category_id,subcategory,price_ngn,old_price_ngn,stock,images,is_active,is_featured,is_best_seller,is_new,short_description,description,ingredients,how_to_use,benefits,tags,concerns,created_at,categories(name)';
 const stockText = (p) => (p.stock <= 0 ? 'Out of stock' : p.stock < 5 ? 'Low stock' : 'In stock');
 
 async function toJpeg(file) {
@@ -27,7 +27,7 @@ function ProductForm({ p, cats, subs = [], onClose, onSaved }) {
   const { sb, toast, token } = useAdmin();
   const [f, setF] = useState({
     name: p?.name || '', brand: p?.brand || '', category_id: p?.category_id || cats[0]?.id || '', subcategory: p?.subcategory || '', price: p?.price_ngn ?? '', old: p?.old_price_ngn ?? '', stock: '',
-    sku: p?.sku || '', short: p?.short_description || '', desc: p?.description || '', ing: p?.ingredients || '', how: p?.how_to_use || '',
+    sku: p?.sku || '', short: p?.short_description || '', desc: p?.description || '', ing: p?.ingredients || '', how: p?.how_to_use || '', benefits: (p?.benefits || []).join('\n'),
     tags: (p?.tags || []).join(', '), concerns: p?.concerns || [], images: p?.images || [], feat: !!p?.is_featured, best: !!p?.is_best_seller, isnew: !!p?.is_new,
   });
   const [busy, setBusy] = useState(false);
@@ -79,7 +79,7 @@ function ProductForm({ p, cats, subs = [], onClose, onSaved }) {
       name: f.name.trim(), brand: f.brand.trim() || 'Tripple H Skin Luxe', category_id: f.category_id || null, subcategory: (f.subcategory || '').trim() || null, price_ngn: price, old_price_ngn: old,
       sku: f.sku.trim() || `THS-${String(Date.now()).slice(-6)}`, short_description: f.short.trim() || null, description: f.desc.trim() || null,
       ingredients: f.ing.trim() || null, how_to_use: f.how.trim() || null, tags: f.tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 20),
-      concerns: f.concerns, images: f.images.filter((u) => /^https:\/\//.test(u)), is_featured: f.feat, is_best_seller: f.best, is_new: f.isnew,
+      benefits: f.benefits.split('\n').map((b) => b.trim()).filter(Boolean).slice(0, 8).map((b) => b.slice(0, 160)), concerns: f.concerns, images: f.images.filter((u) => /^https:\/\//.test(u)), is_featured: f.feat, is_best_seller: f.best, is_new: f.isnew,
     };
     let error;
     if (p) ({ error } = await sb.from('products').update(row).eq('id', p.id));
@@ -122,7 +122,7 @@ function ProductForm({ p, cats, subs = [], onClose, onSaved }) {
       )}
       <div className="row2">{inp('price', 'Price (₦)', { type: 'number', min: 0 })}{inp('old', 'Old price (₦, optional)', { type: 'number', min: 0 })}</div>
       {p ? <p className="sm" style={{ marginBottom: 16 }}>Current stock: <b>{p.stock}</b></p> : inp('stock', 'Opening stock', { type: 'number', min: 0 })}
-      {inp('short', 'Short description', { maxLength: 200 })}{area('desc', 'Description', 4)}{area('ing', 'Ingredients', 2)}{area('how', 'How to use', 2)}
+      {inp('short', 'Short description', { maxLength: 200 })}{area('desc', 'Description', 4)}{area('ing', 'Ingredients', 2)}{area('how', 'How to use', 2)}{area('benefits', 'Key benefits (one per line, up to 8)', 3)}
       {inp('tags', 'Tags (comma separated)')}
       <div className="fld"><label className="f">Skin concerns</label><div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>{Object.entries(CONCERNS).map(([k, l]) => <label key={k} style={{ display: 'flex', gap: 6, fontSize: 14 }}><input type="checkbox" checked={f.concerns.includes(k)} onChange={() => toggleConcern(k)} />{l}</label>)}</div></div>
       <div className="fld" onPaste={onPastePhotos}><label className="f">Photos</label>
