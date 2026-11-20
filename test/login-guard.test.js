@@ -41,7 +41,7 @@ test('login: unknown IP -> only the email is tracked (never lock everybody behin
 
 test('login: already locked -> 429 and the password is NEVER tried (a correct one would not work either)', async () => {
   const m = mk({ check: IN(14), signIn: ok }); const r = await run(m);
-  assert.equal(r.status, 429); assert.match(r.body.error, /14 minutes/); assert.equal(r.body.retry_after_seconds, 14 * 60);
+  assert.equal(r.status, 429); assert.match(r.body.error, /Try again later/); assert.equal(r.body.retry_after_seconds, 14 * 60);
   assert.equal(m.signCalls.length, 0); assert.ok(!m.calls.some((c) => c[0] === 'login_success'));
 });
 
@@ -53,7 +53,7 @@ test('login: wrong password below the limit -> 401 generic message, failure reco
 
 test('login: the wrong password that triggers the lock -> 429 with the wait time', async () => {
   const m = mk({ failure: IN(15), signIn: bad(400) }); const r = await run(m);
-  assert.equal(r.status, 429); assert.match(r.body.error, /15 minutes/);
+  assert.equal(r.status, 429); assert.match(r.body.error, /Try again later/);
 });
 
 test('login: if the lock check itself fails, nobody gets in (fails CLOSED) and the password is not tried', async () => {
@@ -80,10 +80,8 @@ test('login: bad input is rejected before touching the database or Supabase', as
   }
 });
 
-test('lockMessage: minutes / hours wording', () => {
-  assert.match(lockMessage(IN(1), NOW).text, /1 minute\./); assert.match(lockMessage(IN(15), NOW).text, /15 minutes/);
-  assert.match(lockMessage(IN(60), NOW).text, /1 hour\./); assert.match(lockMessage(IN(150), NOW).text, /2 hours 30 minutes/);
+test('lockMessage: one message for every lock length, and the seconds are still correct', () => {
+  for (const n of [1, 15, 60, 150]) assert.equal(lockMessage(IN(n), NOW).text, 'Too many incorrect attempts. Try again later.');
   assert.equal(lockMessage(IN(0), NOW).secs, 1);
-  assert.match(lockMessage(new Date(NOW + 15 * 60000 + 1000).toISOString(), NOW).text, /15 minutes/);   // 15:01 still says 15
-  assert.match(lockMessage(new Date(NOW + 20000).toISOString(), NOW).text, /1 minute\./);
+  assert.equal(lockMessage(new Date(NOW + 20000).toISOString(), NOW).secs, 20);
 });

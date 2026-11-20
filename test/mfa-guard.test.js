@@ -62,7 +62,7 @@ test('2fa: a correct code returns the session tokens only (no user object) and c
 
 test('2fa: the lock is checked FIRST; a locked person is refused even with the right code, and nothing is sent to the provider', async () => {
   const until = new Date(NOW + 14 * 60000).toISOString(); const m = mk({ check: until });
-  const r = await run(m, verifyBody()); assert.equal(r.status, 429); assert.match(r.body.error, /14 minutes/); assert.ok(!m.names().includes('challenge') && !m.names().includes('verify'));
+  const r = await run(m, verifyBody()); assert.equal(r.status, 429); assert.match(r.body.error, /Try again later/); assert.ok(!m.names().includes('challenge') && !m.names().includes('verify'));
 });
 
 test('2fa: a wrong code is recorded; the one that triggers the lock says how long', async () => {
@@ -70,7 +70,7 @@ test('2fa: a wrong code is recorded; the one that triggers the lock says how lon
   const r = await run(m, verifyBody()); assert.equal(r.status, 401); assert.match(r.body.error, /not right/);
   assert.deepEqual(m.log.find((l) => l[0] === 'login_failure')[1].p_subjects, subjectsFor('m', UID, '1.2.3.4'));
   const locked = mk({ verify: () => ({ data: null, error: { status: 400 } }), failure: new Date(NOW + 15 * 60000).toISOString() });
-  const r2 = await run(locked, verifyBody()); assert.equal(r2.status, 429); assert.match(r2.body.error, /15 minutes/);
+  const r2 = await run(locked, verifyBody()); assert.equal(r2.status, 429); assert.match(r2.body.error, /Try again later/);
 });
 
 test('2fa: if the lock cannot be checked, nobody gets in (fails closed) and no code is tried', async () => {
