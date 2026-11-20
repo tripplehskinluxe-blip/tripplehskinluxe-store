@@ -20,7 +20,7 @@ const json = (body, status = 200) => NextResponse.json(body, { status });
 export async function POST(req) {
   // No database or Paystack keys yet: tell the checkout page to run in demo mode instead of failing.
   if (!paymentsConfigured()) return json({ demo: true, error: 'Payments are not configured yet' }, 503);
-  if (!rateLimit(`init:${getIp(req)}`, 10, 60_000)) return json({ error: 'Too many requests. Please wait a minute.' }, 429);
+  if (!await rateLimit(`init:${getIp(req)}`, 10, 60_000)) return json({ error: 'Too many requests. Please wait a minute.' }, 429);
 
   let b;
   try { b = await req.json(); } catch { return json({ error: 'Invalid request' }, 400); }

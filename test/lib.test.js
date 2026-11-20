@@ -7,7 +7,7 @@ import { DEFAULT_SETTINGS } from '../lib/settings-core.js';
 const calcTotals = (o) => calc({ settings: DEFAULT_SETTINGS.delivery, ...o });
 import { verifyPaystackSignature } from '../lib/paystack.js';
 import { validateProductRow, slugify } from '../lib/rows.js';
-import { rateLimit } from '../lib/ratelimit.js';
+import { rateLimitLocal as rateLimit } from '../lib/ratelimit.js';
 
 const items = (price, qty = 1) => [{ price, qty }];
 const WELCOME = { code: 'WELCOME10', type: 'percent', value: 10, min_order_ngn: 0, active: true };

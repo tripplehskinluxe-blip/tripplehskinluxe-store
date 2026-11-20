@@ -14,7 +14,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' };
 // The browser only holds the finished session in memory.
 export async function POST(req) {
   const ip = getIp(req);
-  if (!rateLimit(`mfa:${ip}`, 40, 60_000)) return NextResponse.json({ error: 'Too many requests. Please wait a minute.' }, { status: 429, headers: NO_STORE });
+  if (!await rateLimit(`mfa:${ip}`, 40, 60_000)) return NextResponse.json({ error: 'Too many requests. Please wait a minute.' }, { status: 429, headers: NO_STORE });
   if (Number(req.headers.get('content-length') || 0) > 2_000) return NextResponse.json({ error: 'Request too large' }, { status: 413, headers: NO_STORE });
 
   const auth = await requireSession(req);

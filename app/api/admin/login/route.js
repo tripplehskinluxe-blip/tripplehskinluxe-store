@@ -15,7 +15,7 @@ export async function POST(req) {
   if (!url || !anon || !process.env.SUPABASE_SERVICE_ROLE_KEY) return NextResponse.json({ error: 'Not connected' }, { status: 503, headers: NO_STORE });
 
   const ip = getIp(req);
-  if (!rateLimit(`login:${ip}`, 40, 60_000)) return NextResponse.json({ error: 'Too many requests. Please wait a minute.' }, { status: 429, headers: NO_STORE });
+  if (!await rateLimit(`login:${ip}`, 40, 60_000)) return NextResponse.json({ error: 'Too many requests. Please wait a minute.' }, { status: 429, headers: NO_STORE });
 
   let b; try { b = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request' }, { status: 400, headers: NO_STORE }); }
 

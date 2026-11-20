@@ -11,7 +11,7 @@ export const runtime = 'nodejs';
 export async function POST(req) {
   const auth = await requireStaff(req);
   if (auth.error) return auth.error;
-  if (!rateLimit(`revalidate:${auth.user.id}`, 60, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  if (!await rateLimit(`revalidate:${auth.user.id}`, 60, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   revalidateTag('catalog');
   revalidatePath('/', 'layout');
   return NextResponse.json({ ok: true }, { headers: { 'Cache-Control': 'no-store' } });

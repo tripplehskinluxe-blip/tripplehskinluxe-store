@@ -10,7 +10,7 @@ const last10 = (s) => String(s || '').replace(/\D/g, '').slice(-10);
 
 // Order numbers are sequential, so the phone number is required too (and attempts are rate-limited) to stop people browsing orders.
 export async function POST(req) {
-  if (!rateLimit(`track:${getIp(req)}`, 8, 60_000)) return NextResponse.json({ error: 'Too many attempts. Please wait a minute.' }, { status: 429 });
+  if (!await rateLimit(`track:${getIp(req)}`, 8, 60_000)) return NextResponse.json({ error: 'Too many attempts. Please wait a minute.' }, { status: 429 });
   const b = await req.json().catch(() => ({}));
   const num = String(b.order_number || '').trim().toUpperCase();
   const phone = String(b.phone || '').replace(/\D/g, '');

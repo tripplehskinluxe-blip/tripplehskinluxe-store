@@ -15,7 +15,7 @@ const MESSAGES = { forbidden: 'You are not allowed to do this. Refund decisions 
 export async function POST(req) {
   const auth = await requireStaff(req);
   if (auth.error) return auth.error;
-  if (!rateLimit(`refdecline:${auth.user.id}`, 20, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  if (!await rateLimit(`refdecline:${auth.user.id}`, 20, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   const b = await req.json().catch(() => ({}));
   if (!UUID.test(b.order_id)) return NextResponse.json({ error: 'Invalid order' }, { status: 400 });
   const asUser = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {

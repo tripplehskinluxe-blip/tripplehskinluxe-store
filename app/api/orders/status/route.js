@@ -13,7 +13,7 @@ const read = (db, ref) => db.from('orders').select('order_number,payment_status,
 // Safety net: if the order is still unpaid, ask PAYSTACK (never the browser) whether it was paid, at most once every ~8 seconds
 // per order. This covers a missed or delayed webhook. It uses the same settlement code as the webhook.
 export async function GET(req) {
-  if (!rateLimit(`status:${getIp(req)}`, 60, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  if (!await rateLimit(`status:${getIp(req)}`, 60, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   const ref = new URL(req.url).searchParams.get('reference') || '';
   if (!isOurReference(ref) || !dbConfigured()) return NextResponse.json({ error: 'Not found' }, { status: 404 });     // demo mode has no orders to look up
 
@@ -21,7 +21,7 @@ export async function GET(req) {
   let { data } = await read(db, ref);
   if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  if (data.payment_status === 'unpaid' && rateLimit(`verify:${ref}`, 1, 8000)) {
+  if (data.payment_status === 'unpaid' && await rateLimit(`verify:${ref}`, 1, 8000)) {
     try { await settlePayment(db, ref); } catch (e) { console.error('status fallback failed', e?.message || e); }
     ({ data } = await read(db, ref));
   }

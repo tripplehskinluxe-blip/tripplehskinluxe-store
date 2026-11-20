@@ -11,7 +11,7 @@ const DEMO = {
 
 // Codes are not readable by shoppers; they can only test one code at a time, and attempts are rate-limited.
 export async function POST(req) {
-  if (!rateLimit(`disc:${getIp(req)}`, 15, 60_000)) return NextResponse.json({ error: 'Too many attempts' }, { status: 429 });
+  if (!await rateLimit(`disc:${getIp(req)}`, 15, 60_000)) return NextResponse.json({ error: 'Too many attempts' }, { status: 429 });
   const b = await req.json().catch(() => ({}));
   const code = String(b.code || '').trim().toUpperCase();
   if (!/^[A-Z0-9_-]{3,30}$/.test(code)) return NextResponse.json({ error: 'Invalid code' }, { status: 404 });

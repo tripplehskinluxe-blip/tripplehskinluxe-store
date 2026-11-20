@@ -7,7 +7,7 @@ import { emailConfigured, sendEmail, newsletterWelcomeEmail } from '@/lib/email.
 import { loadSettings, buildSettings } from '@/lib/settings-core.js';
 
 export async function POST(req) {
-  if (!rateLimit(`news:${getIp(req)}`, 5, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  if (!await rateLimit(`news:${getIp(req)}`, 5, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   const b = await req.json().catch(() => ({}));
   if (b.website) return NextResponse.json({ ok: true });            // honeypot: bots fill hidden fields
   const email = String(b.email || '').trim().toLowerCase().slice(0, 254);

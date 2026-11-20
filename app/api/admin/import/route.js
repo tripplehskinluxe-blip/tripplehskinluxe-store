@@ -17,7 +17,7 @@ const fail = (e) => { console.error('import failed', e?.message || e); return Ne
 export async function POST(req) {
   const auth = await requireStaff(req, { adminOnly: true });
   if (auth.error) return auth.error;
-  if (!rateLimit(`import:${auth.user.id}`, 6, 60_000)) return NextResponse.json({ error: 'Too many imports. Wait a minute.' }, { status: 429 });
+  if (!await rateLimit(`import:${auth.user.id}`, 6, 60_000)) return NextResponse.json({ error: 'Too many imports. Wait a minute.' }, { status: 429 });
 
   const dry = new URL(req.url).searchParams.get('dry') === '1';
   const text = await req.text();

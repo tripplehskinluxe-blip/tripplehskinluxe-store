@@ -15,7 +15,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export async function POST(req) {
   const auth = await requireStaff(req);
   if (auth.error) return auth.error;
-  if (!rateLimit(`notify:${auth.user.id}`, 60, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  if (!await rateLimit(`notify:${auth.user.id}`, 60, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
   const b = await req.json().catch(() => ({}));
   if (!UUID.test(b.order_id)) return NextResponse.json({ error: 'Invalid order' }, { status: 400 });

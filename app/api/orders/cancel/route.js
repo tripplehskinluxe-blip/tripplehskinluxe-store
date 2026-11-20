@@ -14,7 +14,7 @@ const NOT_FOUND = { error: 'We could not find that order. Check the order number
 // exactly like order tracking, and guessing is locked out the same way (the two share one counter).
 // What may be cancelled, and when, is decided inside the database, not here.
 export async function POST(req) {
-  if (!rateLimit(`cancel:${getIp(req)}`, 6, 60_000)) return NextResponse.json({ error: 'Too many attempts. Please wait a minute.' }, { status: 429 });
+  if (!await rateLimit(`cancel:${getIp(req)}`, 6, 60_000)) return NextResponse.json({ error: 'Too many attempts. Please wait a minute.' }, { status: 429 });
   const b = await req.json().catch(() => ({}));
   const num = String(b.order_number || '').trim().toUpperCase();
   const phone = String(b.phone || '').replace(/\D/g, '');

@@ -13,7 +13,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export async function POST(req) {
   const auth = await requireStaff(req);
   if (auth.error) return auth.error;
-  if (!rateLimit(`review_status:${auth.user.id}`, 60, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  if (!await rateLimit(`review_status:${auth.user.id}`, 60, 60_000)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   const b = await req.json().catch(() => ({}));
   if (!UUID.test(b.review_id) || !['published', 'hidden'].includes(b.status)) return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   const { error } = await supabaseAdmin().from('reviews').update({ status: b.status }).eq('id', b.review_id);

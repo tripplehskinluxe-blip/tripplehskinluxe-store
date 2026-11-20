@@ -15,7 +15,7 @@ export const runtime = 'nodejs';
 export async function POST(req) {
   const auth = await requireStaff(req, { adminOnly: true });
   if (auth.error) return auth.error;
-  if (!rateLimit(`settings:${auth.user.id}`, 30, 60_000)) return NextResponse.json({ error: 'Too many requests. Please wait a minute.' }, { status: 429 });
+  if (!await rateLimit(`settings:${auth.user.id}`, 30, 60_000)) return NextResponse.json({ error: 'Too many requests. Please wait a minute.' }, { status: 429 });
 
   const b = await req.json().catch(() => null);
   if (!b || !SETTING_KEYS.includes(b.key)) return NextResponse.json({ error: 'Unknown setting' }, { status: 400 });

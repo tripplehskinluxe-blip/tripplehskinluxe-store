@@ -6,7 +6,7 @@ import { rateLimit, getIp } from '@/lib/ratelimit.js';
 const t = (v, n) => String(v ?? '').trim().slice(0, n);
 
 export async function POST(req) {
-  if (!rateLimit(`contact:${getIp(req)}`, 5, 10 * 60_000)) return NextResponse.json({ error: 'Too many messages. Please try again later.' }, { status: 429 });
+  if (!await rateLimit(`contact:${getIp(req)}`, 5, 10 * 60_000)) return NextResponse.json({ error: 'Too many messages. Please try again later.' }, { status: 429 });
   const b = await req.json().catch(() => ({}));
   if (b.website) return NextResponse.json({ ok: true });            // honeypot
   const name = `${t(b.first, 60)} ${t(b.last, 60)}`.trim();

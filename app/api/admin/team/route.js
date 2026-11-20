@@ -15,7 +15,7 @@ const NO_STORE = { 'Cache-Control': 'no-store' };
 export async function POST(req) {
   const auth = await requireStaff(req, { adminOnly: true });
   if (auth.error) return auth.error;
-  if (!rateLimit(`team:${auth.user.id}`, 20, 60_000)) return NextResponse.json({ error: 'Too many requests. Please wait a minute.' }, { status: 429, headers: NO_STORE });
+  if (!await rateLimit(`team:${auth.user.id}`, 20, 60_000)) return NextResponse.json({ error: 'Too many requests. Please wait a minute.' }, { status: 429, headers: NO_STORE });
   if (Number(req.headers.get('content-length') || 0) > 10_000) return NextResponse.json({ error: 'Request too large' }, { status: 413, headers: NO_STORE });
 
   let body; try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid request' }, { status: 400, headers: NO_STORE }); }
