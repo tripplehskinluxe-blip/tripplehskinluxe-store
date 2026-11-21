@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { festiveBanner } from '@/lib/festive.js';
 import FestiveCountdown from '@/components/FestiveCountdown.js';
 
-// Decorations are plain HTML and CSS (no JavaScript), except the New Year countdown. All are hidden for reduced motion (see the CSS).
+// Decorations are plain HTML and CSS (plus the licensed festive images in /public/festive), except the New Year countdown.
+// All of them are hidden for reduced motion (see the CSS).
 const seeded = (n, s) => Array.from({ length: n }, (_, i) => { const k = (i * 9301 + s * 49297) % 233280; return k / 233280; });
 const flakes = (n, layer, s) => seeded(n, s).map((r, i) => {
   const r2 = seeded(n, s + 7)[i], r3 = seeded(n, s + 13)[i];
@@ -24,9 +25,12 @@ export default function FestiveDecor({ theme, name }) {
         <Link className="fx-cta" href="/shop">Shop the season</Link>
       </div>
       {theme === 'christmas' && (
-        <div className="fx" aria-hidden="true">
-          {SNOW.map((f, i) => <i key={i} className={`fx-f l${f.layer}`} style={{ left: `${f.left}%`, animationDelay: `${f.delay}s`, animationDuration: `${f.dur}s`, '--sway': `${f.sway}px` }} />)}
-        </div>
+        <>
+          <img className="fx-sleigh" src="/festive/christmas-sleigh.png" alt="" width="220" height="97" aria-hidden="true" />
+          <div className="fx" aria-hidden="true">
+            {SNOW.map((f, i) => <i key={i} className={`fx-f l${f.layer}`} style={{ left: `${f.left}%`, animationDelay: `${f.delay}s`, animationDuration: `${f.dur}s`, '--sway': `${f.sway}px` }} />)}
+          </div>
+        </>
       )}
       {theme === 'newYear' && (
         <div className="fx" aria-hidden="true">
@@ -39,10 +43,13 @@ export default function FestiveDecor({ theme, name }) {
         </div>
       )}
       {theme === 'halloween' && (
-        <div className="fx fx-hw" aria-hidden="true">
-          <i className="fx-fog" />
-          {BATS.map((b, i) => <i key={i} className="fx-bat" style={{ top: `${b.top}%`, width: b.size, height: b.size * 0.6, animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s` }} />)}
-        </div>
+        <>
+          <img className="fx-web" src="/festive/halloween-web.png" alt="" width="200" height="200" aria-hidden="true" />
+          <div className="fx fx-hw" aria-hidden="true">
+            <i className="fx-fog" />
+            {BATS.map((b, i) => <i key={i} className="fx-bat" style={{ top: `${b.top}%`, width: b.size, height: b.size * 0.6, animationDuration: `${b.dur}s`, animationDelay: `${b.delay}s` }} />)}
+          </div>
+        </>
       )}
     </>
   );

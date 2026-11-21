@@ -608,3 +608,12 @@ body.is-admin .wa{display:none}
 
 /* motion: everyone who asks for reduced motion gets the still version */
 @media (prefers-reduced-motion:reduce){.fx{display:none!important}.fx-lights,.festive .fx-banner::after{animation:none!important}}
+
+/* ---- festive images (licensed, see docs/festive-image-licences.md) ---- */
+.fx-sleigh{position:fixed;top:12vh;left:-240px;width:220px;height:auto;pointer-events:none;z-index:40;display:none;opacity:.95;animation:fxSleigh 34s linear infinite}
+.festive-christmas .fx-sleigh{display:block}
+@keyframes fxSleigh{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 480px))}}
+.fx-web{position:fixed;top:0;right:0;width:200px;height:200px;pointer-events:none;z-index:39;display:none;opacity:.4;filter:invert(1)}
+.festive-halloween .fx-web{display:block}
+@media (max-width:900px){.fx-web{width:130px;height:130px}.fx-sleigh{width:150px}}
+@media (prefers-reduced-motion:reduce){.fx-sleigh{display:none!important}}
