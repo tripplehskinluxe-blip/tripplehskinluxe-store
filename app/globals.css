@@ -626,3 +626,10 @@ body.is-admin .wa{display:none}
 .festive-halloween .fest-band .fb-h{display:block}
 .festive-halloween .fest-band img{filter:saturate(1.05)}
 @media (max-width:640px){.festive .fest-band img{height:110px}}
+
+
+/* ---- snowflakes (replace the plain dots) ---- */
+.festive-christmas .fx-f{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><g stroke='white' stroke-width='3' stroke-linecap='round' fill='none'><path d='M20 20L20.00 3.00M20.00 11.50L15.76 7.26M20.00 11.50L24.24 7.26M20.00 6.74L15.76 2.50M20.00 6.74L24.24 2.50M20 20L34.72 11.50M27.36 15.75L28.91 9.95M27.36 15.75L33.16 17.30M31.48 13.37L33.04 7.57M31.48 13.37L37.28 14.92M20 20L34.72 28.50M27.36 24.25L33.16 22.70M27.36 24.25L28.91 30.05M31.48 26.63L37.28 25.08M31.48 26.63L33.04 32.43M20 20L20.00 37.00M20.00 28.50L24.24 32.74M20.00 28.50L15.76 32.74M20.00 33.26L24.24 37.50M20.00 33.26L15.76 37.50M20 20L5.28 28.50M12.64 24.25L11.09 30.05M12.64 24.25L6.84 22.70M8.52 26.63L6.96 32.43M8.52 26.63L2.72 25.08M20 20L5.28 11.50M12.64 15.75L6.84 17.30M12.64 15.75L11.09 9.95M8.52 13.37L2.72 14.92M8.52 13.37L6.96 7.57'/></g></svg>") no-repeat center/contain;border-radius:0;filter:drop-shadow(0 0 2px rgba(255,255,255,.75))}
+.festive-christmas .fx-f.l0{width:9px;height:9px;opacity:.6;filter:drop-shadow(0 0 1px rgba(255,255,255,.6))}
+.festive-christmas .fx-f.l1{width:14px;height:14px;opacity:.85}
+.festive-christmas .fx-f.l2{width:21px;height:21px;opacity:.95}
