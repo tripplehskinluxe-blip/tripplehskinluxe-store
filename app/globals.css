@@ -548,26 +548,62 @@ body.is-admin .wa{display:none}
 .star-btn{background:none;border:0;cursor:pointer;padding:2px;transition:transform .1s}
 .star-btn:hover{transform:scale(1.12)}
 
-/* ---- festive looks (Admin > Settings > Festive looks). Shown only when a season is switched on. ---- */
+/* ---- festive looks (Admin > Settings > Festive looks). Only shown when a season is switched on. ---- */
 .fx-banner{display:none}
-.festive .fx-banner{display:block;text-align:center;color:#fff;padding:7px 12px;font-size:13px;letter-spacing:.05em;font-weight:500}
-.festive-christmas .fx-banner{background:#b71c1c}
-.festive-newYear .fx-banner{background:#1f1530;color:#f5c542}
-.festive-eid .fx-banner{background:#1b5e4b;color:#f5d27a}
-.festive-halloween .fx-banner{background:#2b1a0e;color:#ff8a1f}
-.fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:1;display:none}
+.festive .fx-banner{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 14px;position:relative;overflow:hidden;color:#fff;padding:9px 16px;font-size:13px;letter-spacing:.05em;font-weight:500;min-height:38px;z-index:55}
+.festive .fx-banner::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);animation:fxShine 4.5s ease-in-out infinite;pointer-events:none}
+.fx-cta{background:#fff;color:#1f1530;border-radius:999px;padding:4px 12px;font-weight:600;font-size:12px;white-space:nowrap}
+.fx-count{font-variant-numeric:tabular-nums;font-weight:600}
+.festive-christmas .fx-banner{background:linear-gradient(90deg,#7f0000,#c62828 50%,#7f0000);}
+.festive-newYear .fx-banner{background:linear-gradient(90deg,#0d0b1f,#1f1530 50%,#0d0b1f);color:#f5c542}
+.festive-newYear .fx-cta{color:#1f1530;background:#f5c542}
+.festive-eid .fx-banner{background:linear-gradient(90deg,#0f3f33,#1b5e4b 50%,#0f3f33);color:#f5d27a}
+.festive-eid .fx-cta{color:#1b5e4b;background:#f5d27a}
+.festive-halloween .fx-banner{background:linear-gradient(90deg,#140a04,#2b1a0e 50%,#140a04);color:#ff8a1f}
+.festive-halloween .fx-cta{color:#2b1a0e;background:#ff8a1f}
+@keyframes fxShine{0%{left:-45%}60%,100%{left:120%}}
+
+/* fairy lights along the top of the Christmas banner */
+.fx-lights{position:absolute;left:0;right:0;top:0;height:9px;pointer-events:none;background:radial-gradient(circle,#ff5252 3px,transparent 3.5px) 0 0/44px 9px repeat-x,radial-gradient(circle,#ffd54f 3px,transparent 3.5px) 22px 4px/44px 9px repeat-x;animation:fxTwinkle 2.6s ease-in-out infinite alternate}
+@keyframes fxTwinkle{from{opacity:.55}to{opacity:1}}
+
+/* the stage that sits over the page, behind the header */
+.fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:40;display:none}
 .festive .fx{display:block}
-.fx i{position:absolute;top:-24px;border-radius:50%;opacity:.85;animation-name:fxFall;animation-timing-function:linear;animation-iteration-count:infinite}
-.festive-christmas .fx i{background:#fff;box-shadow:0 0 3px rgba(255,255,255,.8)}
-.festive-newYear .fx i{border-radius:2px;background:#f5c542}
-.festive-newYear .fx i:nth-child(3n){background:#e8e8f0}
-.festive-newYear .fx i:nth-child(4n){background:#c9a227}
-.festive-eid .fx i{background:#f5d27a;border-radius:0}
-.festive-halloween .fx i{background:#ff8a1f;border-radius:50%}
-@keyframes fxFall{from{transform:translateY(0) rotate(0)}to{transform:translateY(105vh) rotate(360deg)}}
+
+/* Christmas: three layers of snow, far (small, soft) to near (large, quick) */
+.fx-f{position:absolute;top:-30px;border-radius:50%;background:radial-gradient(circle,#fff 45%,rgba(255,255,255,0) 72%);animation-name:fxFall;animation-timing-function:linear;animation-iteration-count:infinite;will-change:transform}
+.fx-f.l0{width:4px;height:4px;opacity:.55;filter:blur(.6px)}
+.fx-f.l1{width:7px;height:7px;opacity:.8}
+.fx-f.l2{width:11px;height:11px;opacity:.95;filter:blur(.4px)}
+@keyframes fxFall{from{transform:translate3d(0,0,0)}to{transform:translate3d(var(--sway),112vh,0)}}
+
+/* New Year: fireworks bursts */
+.fx-burst{position:absolute;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;opacity:0;background:radial-gradient(circle,transparent 18%,#f5c542 19%,transparent 21%,transparent 36%,#fff 37%,transparent 39%,transparent 55%,#f5c542 56%,transparent 58%);animation:fxBurst 4.8s ease-out infinite}
+@keyframes fxBurst{0%{transform:scale(.05);opacity:0}12%{opacity:1}55%{transform:scale(1);opacity:.7}100%{transform:scale(1.25);opacity:0}}
+
+/* Eid: lanterns swing gently from the top */
+.fx-eid{top:0;bottom:auto;height:0}
+.fx-lantern{position:absolute;top:-6px;width:26px;height:40px;margin-left:-13px;border-radius:50% 50% 45% 45%;background:radial-gradient(circle at 40% 35%,#fff7cc,#f5c542 45%,#b8860b);box-shadow:0 0 16px rgba(245,194,66,.6);transform-origin:50% -150px;animation:fxSway 5s ease-in-out infinite alternate}
+.fx-lantern::before{content:'';position:absolute;left:50%;top:-150px;width:1px;height:150px;background:rgba(245,210,122,.7)}
+.fx-lantern::after{content:'';position:absolute;left:4px;right:4px;top:-4px;height:4px;border-radius:2px;background:#8a6410}
+@keyframes fxSway{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+
+/* Halloween: drifting fog and flying bats */
+.fx-hw{top:auto;bottom:0;height:45%;background:linear-gradient(to top,rgba(43,26,14,.45),transparent)}
+.fx-fog{position:absolute;inset:auto -20% 0 -20%;height:120px;background:radial-gradient(ellipse at 30% 100%,rgba(230,230,230,.16),transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(230,230,230,.12),transparent 55%);animation:fxDrift 18s ease-in-out infinite alternate}
+@keyframes fxDrift{from{transform:translateX(-3%)}to{transform:translateX(3%)}}
+.fx-bat{position:absolute;left:-60px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 36'><path d='M30 14 C22 4 12 2 2 8 C8 10 10 14 12 18 C16 16 20 16 24 20 C26 22 28 22 30 20 C32 22 34 22 36 20 C40 16 44 16 48 18 C50 14 52 10 58 8 C48 2 38 4 30 14 Z' fill='%23111'/><circle cx='29' cy='14' r='2' fill='%23ff8a1f'/></svg>") no-repeat center/contain;animation-name:fxFly;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes fxFly{from{transform:translateX(0)}to{transform:translateX(calc(100vw + 120px))}}
+
+/* the logo hat: top-right corner, tilted */
 .festive .logo{position:relative}
-.festive-christmas .logo::after{content:'';position:absolute;width:30px;height:24px;top:-14px;left:50%;margin-left:-15px;pointer-events:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 30'><path d='M4 24 Q20 -4 36 24 Z' fill='%23c62828'/><rect x='2' y='21' width='36' height='7' rx='3.5' fill='%23ffffff'/><circle cx='36' cy='8' r='4' fill='%23ffffff'/></svg>") no-repeat center/contain}
-.festive-newYear .logo::after{content:'';position:absolute;width:24px;height:26px;top:-16px;left:50%;margin-left:-12px;pointer-events:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 26'><path d='M12 1 L22 24 L2 24 Z' fill='%23f5c542'/><circle cx='12' cy='12' r='2' fill='%231f1530'/><circle cx='9' cy='19' r='1.6' fill='%231f1530'/><circle cx='15' cy='18' r='1.6' fill='%231f1530'/></svg>") no-repeat center/contain}
-.festive-eid .logo::after{content:'';position:absolute;width:30px;height:26px;top:-14px;left:50%;margin-left:-15px;pointer-events:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 26'><circle cx='12' cy='13' r='10' fill='%23d4af37'/><circle cx='16' cy='11' r='9' fill='%23ffffff'/><polygon points='23,4 24.6,8.2 29,8.4 25.6,11 26.8,15.2 23,12.8 19.2,15.2 20.4,11 17,8.4 21.4,8.2' fill='%23d4af37'/></svg>") no-repeat center/contain}
-.festive-halloween .logo::after{content:'';position:absolute;width:30px;height:26px;top:-16px;left:50%;margin-left:-15px;pointer-events:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 26'><path d='M15 1 L24 22 L6 22 Z' fill='%23222222'/><rect x='2' y='21' width='26' height='4' rx='2' fill='%23222222'/><circle cx='15' cy='12' r='1.6' fill='%23ff8a1f'/></svg>") no-repeat center/contain}
-@media (prefers-reduced-motion:reduce){.fx{display:none!important}.fx i{animation:none}}
+.festive .logo::after{content:'';position:absolute;pointer-events:none;width:38px;height:31px;right:-16px;top:-22px;transform:rotate(24deg);transform-origin:20% 90%;background-repeat:no-repeat;background-size:contain;background-position:center;z-index:2}
+.festive-christmas .logo::after{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 46'><defs><linearGradient id='r' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23ff4b3e'/><stop offset='1' stop-color='%23a31515'/></linearGradient></defs><path d='M6 36 C16 22 28 14 44 8 C50 6 53 10 50 16 C43 26 42 32 56 38 C44 44 18 44 6 36 Z' fill='url(%23r)'/><path d='M4 34 C18 40 40 40 56 34 L56 42 C40 47 18 47 4 42 Z' fill='%23ffffff'/><circle cx='52' cy='8' r='6.5' fill='%23ffffff'/></svg>")}
+.festive-newYear .logo::after{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 46'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23ffe27a'/><stop offset='1' stop-color='%23c9a227'/></linearGradient></defs><path d='M20 3 L37 42 L3 42 Z' fill='url(%23g)'/><path d='M11 28 L29 28 M8 36 L32 36' stroke='%231f1530' stroke-width='3' stroke-linecap='round'/><circle cx='20' cy='3' r='4.5' fill='%23ffffff'/></svg>")}
+.festive-eid .logo::after{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><circle cx='17' cy='21' r='14' fill='%23d4af37'/><circle cx='23' cy='18' r='12' fill='%23ffffff'/><polygon points='31,6 32.6,10.3 37,10.5 33.6,13.2 34.8,17.5 31,15 27.2,17.5 28.4,13.2 25,10.5 29.4,10.3' fill='%23d4af37'/></svg>")}
+.festive-halloween .logo::after{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 46'><path d='M22 2 C26 14 32 22 38 34 L6 34 C12 22 18 14 22 2 Z' fill='%23222222'/><ellipse cx='22' cy='37' rx='20' ry='5' fill='%23111111'/><rect x='10' y='27' width='24' height='5' rx='1' fill='%23ff8a1f'/><rect x='19' y='26' width='6' height='7' fill='%23c9a227'/></svg>")}
+@media (max-width:900px){.festive .logo::after{width:30px;height:25px;right:-12px;top:-17px}}
+
+/* motion: everyone who asks for reduced motion gets the still version */
+@media (prefers-reduced-motion:reduce){.fx{display:none!important}.fx-lights,.festive .fx-banner::after{animation:none!important}}
