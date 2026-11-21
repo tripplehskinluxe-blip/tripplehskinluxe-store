@@ -6,7 +6,7 @@ import SpecForm, { setIn } from '@/components/admin/SpecForm';
 import SpecView from '@/components/admin/SpecView';
 import { SPEC, DEFAULT_SETTINGS, buildSettings } from '@/lib/settings-core.js';
 
-const TABS = [['store', 'Business'], ['delivery', 'Delivery'], ['spa', 'Spa menu'], ['faq', 'FAQ'], ['about', 'About'], ['ceo', 'CEO'], ['security', 'Login security']];
+const TABS = [['store', 'Business'], ['delivery', 'Delivery'], ['spa', 'Spa menu'], ['faq', 'FAQ'], ['about', 'About'], ['festive', 'Festive looks'], ['ceo', 'CEO'], ['security', 'Login security']];
 const SEC = [
   ['login_max_failures', 'Wrong attempts before a lock', 3, 20],
   ['login_base_lock_minutes', 'First lock (minutes)', 1, 1440],

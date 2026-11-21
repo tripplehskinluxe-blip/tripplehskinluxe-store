@@ -547,3 +547,27 @@ body.is-admin .wa{display:none}
 /* review page: star rating buttons */
 .star-btn{background:none;border:0;cursor:pointer;padding:2px;transition:transform .1s}
 .star-btn:hover{transform:scale(1.12)}
+
+/* ---- festive looks (Admin > Settings > Festive looks). Shown only when a season is switched on. ---- */
+.fx-banner{display:none}
+.festive .fx-banner{display:block;text-align:center;color:#fff;padding:7px 12px;font-size:13px;letter-spacing:.05em;font-weight:500}
+.festive-christmas .fx-banner{background:#b71c1c}
+.festive-newYear .fx-banner{background:#1f1530;color:#f5c542}
+.festive-eid .fx-banner{background:#1b5e4b;color:#f5d27a}
+.festive-halloween .fx-banner{background:#2b1a0e;color:#ff8a1f}
+.fx{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:1;display:none}
+.festive .fx{display:block}
+.fx i{position:absolute;top:-24px;border-radius:50%;opacity:.85;animation-name:fxFall;animation-timing-function:linear;animation-iteration-count:infinite}
+.festive-christmas .fx i{background:#fff;box-shadow:0 0 3px rgba(255,255,255,.8)}
+.festive-newYear .fx i{border-radius:2px;background:#f5c542}
+.festive-newYear .fx i:nth-child(3n){background:#e8e8f0}
+.festive-newYear .fx i:nth-child(4n){background:#c9a227}
+.festive-eid .fx i{background:#f5d27a;border-radius:0}
+.festive-halloween .fx i{background:#ff8a1f;border-radius:50%}
+@keyframes fxFall{from{transform:translateY(0) rotate(0)}to{transform:translateY(105vh) rotate(360deg)}}
+.festive .logo{position:relative}
+.festive-christmas .logo::after{content:'';position:absolute;width:30px;height:24px;top:-14px;left:50%;margin-left:-15px;pointer-events:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 30'><path d='M4 24 Q20 -4 36 24 Z' fill='%23c62828'/><rect x='2' y='21' width='36' height='7' rx='3.5' fill='%23ffffff'/><circle cx='36' cy='8' r='4' fill='%23ffffff'/></svg>") no-repeat center/contain}
+.festive-newYear .logo::after{content:'';position:absolute;width:24px;height:26px;top:-16px;left:50%;margin-left:-12px;pointer-events:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 26'><path d='M12 1 L22 24 L2 24 Z' fill='%23f5c542'/><circle cx='12' cy='12' r='2' fill='%231f1530'/><circle cx='9' cy='19' r='1.6' fill='%231f1530'/><circle cx='15' cy='18' r='1.6' fill='%231f1530'/></svg>") no-repeat center/contain}
+.festive-eid .logo::after{content:'';position:absolute;width:30px;height:26px;top:-14px;left:50%;margin-left:-15px;pointer-events:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 26'><circle cx='12' cy='13' r='10' fill='%23d4af37'/><circle cx='16' cy='11' r='9' fill='%23ffffff'/><polygon points='23,4 24.6,8.2 29,8.4 25.6,11 26.8,15.2 23,12.8 19.2,15.2 20.4,11 17,8.4 21.4,8.2' fill='%23d4af37'/></svg>") no-repeat center/contain}
+.festive-halloween .logo::after{content:'';position:absolute;width:30px;height:26px;top:-16px;left:50%;margin-left:-15px;pointer-events:none;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 26'><path d='M15 1 L24 22 L6 22 Z' fill='%23222222'/><rect x='2' y='21' width='26' height='4' rx='2' fill='%23222222'/><circle cx='15' cy='12' r='1.6' fill='%23ff8a1f'/></svg>") no-repeat center/contain}
+@media (prefers-reduced-motion:reduce){.fx{display:none!important}.fx i{animation:none}}
