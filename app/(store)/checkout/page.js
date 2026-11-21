@@ -8,7 +8,7 @@ import { STATES, areasFor } from '@/lib/ng-areas.js';
 import ProductArt from '@/components/ProductArt';
 import Icon from '@/components/Icon';
 import { useCart } from '@/components/CartProvider';
-import FestiveBand from '@/components/FestiveBand.js';
+import FestiveStep from '@/components/FestiveStep.js';
 import { useCartLines, totalsFor } from '@/components/useCartLines';
 import { useSettings } from '@/components/SettingsProvider';
 import { naira } from '@/lib/format.js';
@@ -105,7 +105,7 @@ export default function Checkout() {
 
   return (
     <>
-      <FestiveBand />
+      
       <div className="ph"><div className="container"><h1>Checkout</h1><p>Secure checkout, powered by Paystack</p></div></div>
       <div className="container"><div className="two">
         <div>
@@ -117,11 +117,13 @@ export default function Checkout() {
           </div>
           <div className="box">
             {step === 1 && <>
+              <FestiveStep kind="contact" />
               <h3 style={{ marginBottom: 18 }}>Customer details</h3>
               {field('name', 'Full name', 'text', 'e.g. Amaka Okafor')}{field('email', 'Email', 'email', 'you@example.com')}{field('phone', 'Phone', 'tel', '0801 234 5678')}
               <button className="btn" onClick={next}>Continue to delivery</button>
             </>}
             {step === 2 && <>
+              <FestiveStep kind="delivery" />
               <h3 style={{ marginBottom: 14 }}>How would you like to receive your order?</h3>
               <label className="pay" style={{ marginBottom: 10 }}><input type="radio" name="dm" checked={method === 'delivery'} onChange={() => { setMethod('delivery'); setErr({}); }} /><span><b>Door delivery</b><small>We deliver to your address. The fee depends on your state.</small></span></label>
               <label className="pay" style={{ marginBottom: 20 }}><input type="radio" name="dm" checked={method === 'pickup'} onChange={() => { setMethod('pickup'); setErr({}); }} /><span><b>Store pickup</b><small>Free. Ready within 48 hours. You will receive an email from us once ready.</small></span></label>
@@ -135,6 +137,7 @@ export default function Checkout() {
               <div style={{ display: 'flex', gap: 10 }}><button className="btn ghost" onClick={() => setStep(1)}>Back</button><button className="btn" onClick={next}>Continue to payment</button></div>
             </>}
             {step === 3 && <>
+              <FestiveStep kind="payment" />
               <h3 style={{ marginBottom: 18 }}>Payment</h3>
               <label className="pay"><input type="radio" checked readOnly /><span><b>Pay securely with Paystack</b><small>Card, bank transfer or USSD on Paystack&apos;s secure page. We never see your card details.</small></span></label>
               <p className="sm mut" style={{ margin: '16px 0', display: 'flex', gap: 6, alignItems: 'center' }}><Icon n="lock" s={14} /> You&apos;ll be redirected to Paystack to complete payment.</p>

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ProductGallery from '@/components/ProductGallery';
 import ProductBuy from '@/components/ProductBuy';
+import FestiveStep from '@/components/FestiveStep.js';
 import ProductGrid from '@/components/ProductGrid';
 import Stars from '@/components/Stars';
 import { getProductBySlug, getRelated } from '@/lib/catalog.js';
@@ -51,6 +52,7 @@ export default async function ProductPage({ params }) {
           <p className="mut" style={{ margin: '8px 0' }}>{p.shortDescription}</p>
           <div className={`stk ${p.stock <= 0 ? 'out' : low ? 'low' : ''}`}><i />{p.stock <= 0 ? 'Out of stock' : low ? `Only ${p.stock} left in stock` : 'In stock'}</div>
           <ProductBuy product={p} />
+          <FestiveStep kind="product" />
           <div className="acc">
             <details open><summary>Description</summary><div>{p.description}</div></details>
             {benefits.length > 0 && <details><summary>Key benefits</summary><ul>{benefits.map((b) => <li key={b}>{b}</li>)}</ul></details>}
