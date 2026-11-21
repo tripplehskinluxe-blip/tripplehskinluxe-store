@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import Icon from '@/components/Icon';
 import { useCart } from '@/components/CartProvider';
+import FestiveBand from '@/components/FestiveBand.js';
 import { naira } from '@/lib/format.js';
 import { useSettings } from '@/components/SettingsProvider';
 
@@ -48,7 +49,7 @@ function Inner() {
   const num = demo ? o.number : o.order_number;
   return (
     <div className="container" style={{ maxWidth: 780, padding: '56px 20px 90px' }}>
-      <div className="center"><div className="ok-ic"><Icon n="check" s={34} /></div><h1 style={{ fontSize: 'clamp(34px,5vw,52px)' }}>Order confirmed!</h1><p className="mut" style={{ marginTop: 8 }}>Thank you for shopping with {store.name}.</p></div>
+      <FestiveBand /><div className="center"><div className="ok-ic"><Icon n="check" s={34} /></div><h1 style={{ fontSize: 'clamp(34px,5vw,52px)' }}>Order confirmed!</h1><p className="mut" style={{ marginTop: 8 }}>Thank you for shopping with {store.name}.</p></div>
       <div className="box" style={{ marginTop: 30 }}>
         <div className="kv">
           <dt>Order number</dt><dd><b>{num}</b></dd>

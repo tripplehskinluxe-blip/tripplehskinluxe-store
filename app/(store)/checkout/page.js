@@ -8,6 +8,7 @@ import { STATES, areasFor } from '@/lib/ng-areas.js';
 import ProductArt from '@/components/ProductArt';
 import Icon from '@/components/Icon';
 import { useCart } from '@/components/CartProvider';
+import FestiveBand from '@/components/FestiveBand.js';
 import { useCartLines, totalsFor } from '@/components/useCartLines';
 import { useSettings } from '@/components/SettingsProvider';
 import { naira } from '@/lib/format.js';
@@ -104,6 +105,7 @@ export default function Checkout() {
 
   return (
     <>
+      <FestiveBand />
       <div className="ph"><div className="container"><h1>Checkout</h1><p>Secure checkout, powered by Paystack</p></div></div>
       <div className="container"><div className="two">
         <div>

@@ -617,3 +617,12 @@ body.is-admin .wa{display:none}
 .festive-halloween .fx-web{display:block}
 @media (max-width:900px){.fx-web{width:130px;height:130px}.fx-sleigh{width:150px}}
 @media (prefers-reduced-motion:reduce){.fx-sleigh{display:none!important}}
+
+/* ---- festive pages: cart, checkout, confirmation (receipt) ---- */
+.fest-band{display:none}
+.festive .fest-band{display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;padding:22px 16px 0;background:linear-gradient(180deg,rgba(255,255,255,0),#fff)}
+.fest-band img{display:none;height:150px;width:auto;border-radius:12px;box-shadow:0 10px 26px -12px rgba(31,21,48,.35);object-fit:cover}
+.festive-christmas .fest-band .fb-c{display:block}
+.festive-halloween .fest-band .fb-h{display:block}
+.festive-halloween .fest-band img{filter:saturate(1.05)}
+@media (max-width:640px){.festive .fest-band img{height:110px}}

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import ProductArt from '@/components/ProductArt';
 import Icon from '@/components/Icon';
 import { useCart } from '@/components/CartProvider';
+import FestiveBand from '@/components/FestiveBand.js';
 import { useCartLines, totalsFor } from '@/components/useCartLines';
 import { naira } from '@/lib/format.js';
 import { useSettings } from '@/components/SettingsProvider';
@@ -45,6 +46,7 @@ export default function CartPage() {
 
   return (
     <>
+      <FestiveBand />
       <div className="ph"><div className="container"><h1>Shopping bag</h1><p>{count} item{count === 1 ? '' : 's'}</p></div></div>
       <div className="container"><div className="two">
         <div>
