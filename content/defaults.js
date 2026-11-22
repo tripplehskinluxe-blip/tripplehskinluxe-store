@@ -9,10 +9,10 @@ export const DEFAULT_SETTINGS = {
     logo: '/logo.png',
     announce: 'Free delivery on orders over {{freeThreshold}} in Lagos',
     announceOn: true,
-    whatsapp: '2348000000000',               // international format, digits only
+    whatsapp: '2348185775887',               // international format, digits only
     phone: '+234 800 000 0000',
     email: 'tripplehskinluxe@gmail.com',            // placeholder: replace with the real address
-    address: '15 Admiralty Way, Lekki Phase 1, Lagos, Nigeria',
+    address: 'NO 3, ARAROMI, ONIKE, YABA, LAGOS, Nigeria',
     hours: 'Mon to Sat 9am to 7pm · Sun 12pm to 5pm',
     social: { instagram: 'https://www.instagram.com/tripplehskinluxe', tiktok: '', facebook: '', youtube: '', x: '' },
   },

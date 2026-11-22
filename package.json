@@ -17,7 +17,10 @@
     "papaparse": "^5.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "@fontsource-variable/fraunces": "5.3.0",
+    "@fontsource-variable/figtree": "5.3.0",
+    "@fontsource/cormorant-garamond": "5.3.0"
   },
   "engines": {
     "node": ">=20.9.0"

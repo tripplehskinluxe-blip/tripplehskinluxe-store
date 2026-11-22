@@ -1,11 +1,14 @@
 import './globals.css';
-import { Fraunces, Figtree, Cormorant_Garamond } from 'next/font/google';
+import '@fontsource-variable/fraunces';
+import '@fontsource-variable/figtree';
+import '@fontsource/cormorant-garamond/500.css';
+import '@fontsource/cormorant-garamond/600.css';
+import '@fontsource/cormorant-garamond/700.css';
+import '@fontsource/cormorant-garamond/500-italic.css';
+import '@fontsource/cormorant-garamond/600-italic.css';
+import '@fontsource/cormorant-garamond/700-italic.css';
 import SettingsProvider from '@/components/SettingsProvider';
 import { getSettings } from '@/lib/settings.js';
-
-const serif = Fraunces({ subsets: ['latin'], variable: '--font-serif' });
-const sans = Figtree({ subsets: ['latin'], variable: '--font-sans' });
-const classic = Cormorant_Garamond({ subsets: ['latin'], weight: ['500', '600', '700'], style: ['normal', 'italic'], variable: '--font-classic' });
 
 export async function generateMetadata() {
   const { store } = await getSettings();
@@ -21,7 +24,7 @@ export const viewport = { themeColor: '#4b1f75', width: 'device-width', initialS
 export default async function RootLayout({ children }) {
   const settings = await getSettings();
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} ${classic.variable}`}>
+    <html lang="en">
       <body><SettingsProvider settings={settings}>{children}</SettingsProvider></body>
     </html>
   );
