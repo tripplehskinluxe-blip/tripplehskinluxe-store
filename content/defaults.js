@@ -11,7 +11,7 @@ export const DEFAULT_SETTINGS = {
     announceOn: true,
     whatsapp: '2348000000000',               // international format, digits only
     phone: '+234 800 000 0000',
-    email: 'hello@lumebeauty.ng',            // placeholder: replace with the real address
+    email: 'tripplehskinluxe@gmail.com',            // placeholder: replace with the real address
     address: '15 Admiralty Way, Lekki Phase 1, Lagos, Nigeria',
     hours: 'Mon to Sat 9am to 7pm · Sun 12pm to 5pm',
     social: { instagram: 'https://www.instagram.com/tripplehskinluxe', tiktok: '', facebook: '', youtube: '', x: '' },
