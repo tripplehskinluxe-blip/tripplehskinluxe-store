@@ -6,6 +6,7 @@ import { calcTotals } from '@/lib/pricing.js';
 import { loadSettings } from '@/lib/settings-core.js';
 import { discountUsable } from '@/lib/pricing.js';
 import { initializeTransaction } from '@/lib/paystack.js';
+import { releaseExpiredHolds } from '@/lib/stock-hold.js';
 import { rateLimit, getIp } from '@/lib/ratelimit.js';
 import { paymentsConfigured } from '@/lib/config.js';
 import { STATES, otherStatesFor } from '@/lib/ng-areas.js';
@@ -84,6 +85,7 @@ export async function POST(req) {
   const attention = elsewhere.length ? `City "${address.city}" is in ${elsewhere.join(' / ')}, but the customer chose ${address.state}. Check the address before dispatch (the delivery fee depends on the state).` : '';
 
   const reference = 'ths_' + crypto.randomUUID();
+  await releaseExpiredHolds(db);   // give back any expired holds first (only after Paystack confirms)
   const { data: orderNumber, error: oe } = await db.rpc('create_online_order', {
     p: {
       reference, name, email, phone, address: finalAddress, delivery_method: method, attention_reason: attention,

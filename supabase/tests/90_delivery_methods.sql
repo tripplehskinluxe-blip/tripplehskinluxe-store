@@ -105,9 +105,9 @@ select pg_temp.expect('a very long reason is cut to 200 characters', (select len
 
 \echo --- CANCELLING A PAID PICKUP ORDER
 select pg_temp.mk('ths_c1','pickup',0); select pg_temp.pay('ths_c1');
-select pg_temp.expect('stock is taken when a pickup order is paid', (select stock::text from public.products where sku='S1'), '16');
+select pg_temp.expect('stock is taken when the pickup order is placed (16 to 14); paying does not take it again', (select stock::text from public.products where sku='S1'), '14');
 select pg_temp.as_('00000000-0000-0000-0000-0000000000b1','aal2'); set role authenticated;
 select public.set_order_status((select id from public.orders where paystack_reference='ths_c1'),'cancelled');
 reset role;
-select pg_temp.expect('cancelling puts the stock back', (select stock::text from public.products where sku='S1'), '17');
+select pg_temp.expect('cancelling a paid pickup puts its 1 item back (14 to 15)', (select stock::text from public.products where sku='S1'), '15');
 select pg_temp.expect('a cancelled paid order is flagged: refund due', pg_temp.col('ths_c1','needs_attention') || ' / ' || pg_temp.col('ths_c1','payment_status'), 'true / paid');

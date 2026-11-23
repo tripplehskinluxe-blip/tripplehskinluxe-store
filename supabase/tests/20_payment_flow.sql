@@ -32,14 +32,15 @@ reset role;
 select pg_temp.expect('cancelled order stays cancelled', (select status from public.orders where paystack_reference='ths_b'), 'cancelled');
 select pg_temp.expect('late payment recorded as paid', (select payment_status from public.orders where paystack_reference='ths_b'), 'paid');
 select pg_temp.expect('late payment flagged for a human', (select needs_attention::text from public.orders where paystack_reference='ths_b'), 'true');
-select pg_temp.expect('cancelled order takes no stock', (select stock::text from public.products where sku='S1'), '3');
+-- stock is taken at checkout now; a cancelled order gives its held stock back (the server does this with release_hold)
+select public.release_hold((select id from public.orders where paystack_reference='ths_b'));
+select pg_temp.expect('cancelled order gives its held stock back (3)', (select stock::text from public.products where sku='S1'), '3');
 
 -- oversell: stock 3, two orders of 2 both created while stock was enough
 update public.products set stock=3 where sku='S1';
 set role service_role;
-select pg_temp.mk('ths_c', 2); select pg_temp.mk('ths_d', 2);
-select pg_temp.expect('first of two competing orders wins', public.mark_order_paid('ths_c', 2200000), 'paid');
-select pg_temp.expect('second is paid-but-flagged, stock never negative', public.mark_order_paid('ths_d', 2200000), 'paid_stock_issue');
+select pg_temp.mk('ths_c', 2);
+DO $x$ BEGIN BEGIN PERFORM pg_temp.mk('ths_d', 2); RAISE NOTICE 'FAIL the second competing order was allowed while stock is held'; EXCEPTION WHEN others THEN RAISE NOTICE 'ok  the second competing order is refused while stock is held'; END; END $x$;
+select pg_temp.expect('the order that holds the stock is paid', public.mark_order_paid('ths_c', 2200000), 'paid');
 reset role;
-select pg_temp.expect('stock is 1, not -1', (select stock::text from public.products where sku='S1'), '1');
-select pg_temp.expect('oversold order flagged', (select needs_attention::text from public.orders where paystack_reference='ths_d'), 'true');
+select pg_temp.expect('stock is 1 (3 minus the 2 held for the paid order), never negative', (select stock::text from public.products where sku='S1'), '1');

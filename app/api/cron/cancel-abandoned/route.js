@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin.js';
 import { dbConfigured } from '@/lib/config.js';
+import { releaseExpiredHolds } from '@/lib/stock-hold.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,6 +21,7 @@ function authorised(req) {
 export async function GET(req) {
   if (!authorised(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!dbConfigured()) return NextResponse.json({ error: 'Not connected' }, { status: 503 });
+  await releaseExpiredHolds(supabaseAdmin());
   const { data, error } = await supabaseAdmin().rpc('cancel_abandoned_orders');
   if (error) { console.error('cron: cancel_abandoned_orders failed', error.message); return NextResponse.json({ error: 'Failed' }, { status: 500 }); }
   return NextResponse.json({ cancelled: data });
