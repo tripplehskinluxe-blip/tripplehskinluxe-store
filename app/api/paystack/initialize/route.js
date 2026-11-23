@@ -10,6 +10,8 @@ import { releaseExpiredHolds } from '@/lib/stock-hold.js';
 import { rateLimit, getIp } from '@/lib/ratelimit.js';
 import { paymentsConfigured } from '@/lib/config.js';
 import { STATES, otherStatesFor } from '@/lib/ng-areas.js';
+import { loadShippingData } from '@/lib/shipping-data.js';
+import { resolveShipping, chooseShipping } from '@/lib/shipping-core.js';
 
 export const runtime = 'nodejs';
 
@@ -43,6 +45,9 @@ export async function POST(req) {
   const address = { state: clean(a.state, 40), city: clean(a.city, 80), address: clean(a.address, 200), landmark: clean(a.landmark, 120), notes: clean(a.notes, 300) };
   if (method === 'delivery' && (!address.state || !address.city || !address.address)) return json({ error: 'Delivery address is incomplete' }, 400);
   if (method === 'delivery' && !STATES.includes(address.state)) return json({ error: 'Please choose a valid delivery state' }, 400);
+  const lga = clean(b.lga, 40);
+  const shippingOption = clean(b.shipping_option, 80);
+  if (method === 'delivery' && !shippingOption) return json({ error: 'Please choose a delivery option' }, 400);
 
   const qtyBy = new Map();
   items.forEach((i) => qtyBy.set(i.product_id, (qtyBy.get(i.product_id) || 0) + i.qty));
@@ -72,18 +77,32 @@ export async function POST(req) {
   // Fresh from the database every time (never the cached copy the pages use): this is the number the customer is charged.
   let delivery, store;
   try { const cfg = await loadSettings(db); delivery = cfg.delivery; store = cfg.store; } catch (e) { console.error('settings lookup', e?.message); return json({ error: 'Something went wrong' }, 500); }   // fail closed: never charge with guessed fees
-  const totals = calcTotals({ items: lines, discount, state: address.state, method, settings: delivery });
+  // Delivery: the server works out the options for this address and local government, and checks the option chosen is one of them.
+  let shipping = null, shipLabel = null, shipLga = null, shipAttention = null;
+  if (method === 'delivery') {
+    let sd;
+    try { sd = await loadShippingData(db, delivery); } catch (e) { console.error('shipping lookup', e?.message); return json({ error: 'Something went wrong' }, 500); }
+    const resolved = resolveShipping(sd, { state: address.state, lga, address: [address.address, address.city, address.landmark].join(' ') });
+    const choice = chooseShipping(resolved, shippingOption, address.state);
+    if (!choice.ok) return json({ code: choice.code, error: choice.error, ...(choice.correct_lga ? { correct_lga: choice.correct_lga } : {}) }, 409);
+    shipping = { fee: choice.fee, freeEligible: choice.freeEligible };
+    shipLabel = choice.label;
+    shipLga = address.state.toLowerCase() === 'lagos' ? lga : null;
+    shipAttention = resolved.flags.length ? `Shipping check: ${resolved.flags.join(', ')}. Confirm the address before dispatch.` : null;
+  }
+  const totals = calcTotals({ items: lines, discount, state: address.state, method, settings: delivery, shipping });
 
   // The customer must be charged exactly what they were shown. If a price or a delivery fee changed in the meantime, stop and tell them.
   if (b.expected_total !== undefined && (!Number.isInteger(b.expected_total) || b.expected_total !== totals.total))
     return json({ code: 'PRICE_CHANGED', error: 'Prices or delivery fees were just updated. The page will refresh so you can review your new total.', total: totals.total }, 409);
 
   // A pickup order never uses an address from the browser: it always points at the shop (as saved in Settings).
-  const finalAddress = method === 'pickup' ? { pickup: true, state: 'Lagos', city: '', address: clean(store?.address, 200), landmark: '', notes: '' } : address;
+  const finalAddress = method === 'pickup' ? { pickup: true, state: 'Lagos', city: '', address: clean(store?.address, 200), landmark: '', notes: '' } : { ...address, lga: shipLga, shipping_option: shipLabel };
   // Delivery fees depend on the state. If the city is a known place in a DIFFERENT state, flag it for staff to check before dispatch.
   const elsewhere = method === 'delivery' ? otherStatesFor(address.state, address.city) : [];
-  const attention = elsewhere.length ? `City "${address.city}" is in ${elsewhere.join(' / ')}, but the customer chose ${address.state}. Check the address before dispatch (the delivery fee depends on the state).` : '';
+  const cityAttention = elsewhere.length ? `City "${address.city}" is in ${elsewhere.join(' / ')}, but the customer chose ${address.state}. Check the address before dispatch (the delivery fee depends on the state).` : '';
 
+  const attention = [cityAttention, shipAttention].filter(Boolean).join(' ') || null;
   const reference = 'ths_' + crypto.randomUUID();
   await releaseExpiredHolds(db);   // give back any expired holds first (only after Paystack confirms)
   const { data: orderNumber, error: oe } = await db.rpc('create_online_order', {

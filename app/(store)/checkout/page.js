@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import AreaInput from '@/components/AreaInput';
 import { STATES, areasFor } from '@/lib/ng-areas.js';
+import { LAGOS_LGAS } from '@/lib/shipping-core.js';
 import ProductArt from '@/components/ProductArt';
 import Icon from '@/components/Icon';
 import { useCart } from '@/components/CartProvider';
@@ -25,10 +26,24 @@ export default function Checkout() {
   const [promo, setPromo] = useState(null);
   const [method, setMethod] = useState('delivery');   // 'delivery' or 'pickup'
   const [d, setD] = useState({ name: '', email: '', phone: '', state: 'Lagos', city: '', address: '', landmark: '', notes: '' });
+  const [lga, setLga] = useState('');        // Lagos local government (required for Lagos)
+  const [opts, setOpts] = useState(null);     // delivery options the server offers for this address
+  const [pick, setPick] = useState('');       // the option the customer chose
 
   useEffect(() => { try { setPromo(JSON.parse(localStorage.getItem('ths_promo') || 'null')); } catch {} }, []);
+  useEffect(() => {
+    if (method !== 'delivery') { setOpts(null); setPick(''); return; }
+    if (d.state === 'Lagos' && !lga) { setOpts(null); setPick(''); return; }
+    const q = new URLSearchParams({ state: d.state, lga: d.state === 'Lagos' ? lga : '', address: [d.address, d.city, d.landmark].filter(Boolean).join(' ') });
+    const id = setTimeout(() => {
+      fetch('/api/shipping/options?' + q.toString()).then((r) => r.json()).then((o) => { if (o.error) { setOpts(null); return; } setOpts(o); setPick(o.recommended || ''); }).catch(() => setOpts(null));
+    }, 300);
+    return () => clearTimeout(id);
+  }, [method, d.state, lga, d.city, d.address, d.landmark]);
   const set = (k) => (e) => { setD({ ...d, [k]: e.target.value }); if (err[k]) setErr({ ...err, [k]: undefined }); };
-  const t = totalsFor(lines, promo, d.state === 'Lagos' ? 'lagos' : 'other', delivery, method);
+  const chosen = opts && method === 'delivery' ? opts.options.find((o) => o.id === pick) : null;
+  const shipping = chosen && chosen.priced ? { fee: chosen.fee, freeEligible: d.state === 'Lagos' && (chosen.type === 'lga' || chosen.type === 'area') } : null;
+  const t = totalsFor(lines, promo, d.state === 'Lagos' ? 'lagos' : 'other', delivery, method, shipping);
 
   const validate = (s) => {
     const e = {};
@@ -40,6 +55,9 @@ export default function Checkout() {
     if (s === 2 && method === 'delivery') {
       if (!d.city.trim()) e.city = 'Enter your city or area';
       if (!d.address.trim()) e.address = 'Enter your street address';
+      if (d.state === 'Lagos' && !lga) e.lga = 'Choose your local government';
+      if (opts && opts.mismatch) e.ship = 'Please correct your local government';
+      else if (!pick) e.ship = 'Choose a delivery option';
     }
     return e;
   };
@@ -56,6 +74,8 @@ export default function Checkout() {
           items: cart.map((c) => ({ product_id: c.id, qty: c.qty })),
           customer: { name: d.name, email: d.email, phone: d.phone },
           delivery_method: method,
+          lga: d.state === 'Lagos' ? lga : '',
+          shipping_option: method === 'delivery' ? pick : '',
           address: method === 'pickup' ? {} : { state: d.state, city: d.city, address: d.address, landmark: d.landmark, notes: d.notes },
           discount_code: promo?.code || '',
           expected_total: t.total,        // the server refuses to charge a different amount than the one shown here
@@ -130,10 +150,14 @@ export default function Checkout() {
               {method === 'pickup' && <div className="box" style={{ background: 'var(--ps)', marginBottom: 20 }}><b>Collect from</b><p className="sm" style={{ marginTop: 6 }}>{store?.address}</p><p className="sm mut" style={{ marginTop: 8 }}>You still pay online now. We will email you a pickup code when your order is ready.</p></div>}
               {method === 'delivery' && (<>
               <div className="fld"><label className="f" htmlFor="c_state">State</label><select id="c_state" className="sel" value={d.state} onChange={set('state')}>{STATES.map((s) => <option key={s}>{s}</option>)}</select></div>
+              {d.state === 'Lagos' && (<div className="fld"><label className="f" htmlFor="c_lga">Local government</label><select id="c_lga" className={`sel ${err.lga ? 'bad' : ''}`} value={lga} onChange={(e) => { setLga(e.target.value); setErr((p) => ({ ...p, lga: undefined })); }}><option value="">Choose your local government</option>{LAGOS_LGAS.map((n) => <option key={n} value={n}>{n}</option>)}</select>{err.lga && <span className="err">{err.lga}</span>}</div>)}
               <div className="row2"><AreaInput id="c_city" label="City / Area" value={d.city} suggestions={areasFor(d.state)} stateKey={d.state} error={err.city} onChange={(v) => { setD((p) => ({ ...p, city: v })); setErr((p) => (p.city ? { ...p, city: undefined } : p)); }} />{field('landmark', 'Apartment / Landmark')}</div>
               {field('address', 'Street address')}
               <div className="fld"><label className="f" htmlFor="c_notes">Delivery notes (optional)</label><textarea id="c_notes" className="inp" rows={3} value={d.notes} onChange={set('notes')} /></div>
               </>)}
+              {method === 'delivery' && opts && opts.mismatch && (<div className="box" style={{ background: '#fff4e0', marginBottom: 12 }}><b>Please check your local government</b><p className="sm" style={{ marginTop: 6 }}>This address is in {opts.mismatch.correct_lga}, not {opts.mismatch.chosen_lga}. Please choose {opts.mismatch.correct_lga}.</p></div>)}
+              {method === 'delivery' && opts && !opts.mismatch && opts.options.length > 0 && (<div className="fld"><span className="f">Delivery option</span>{opts.options.map((o) => (<label key={o.id} className="pay" style={{ marginBottom: 8 }}><input type="radio" name="ship" checked={pick === o.id} disabled={!o.priced} onChange={() => { setPick(o.id); setErr((p) => ({ ...p, ship: undefined })); }} /><span><b>{o.label}{o.id === opts.recommended ? ' · recommended' : ''}</b><small>{o.priced ? naira(o.fee) : 'Price not set yet'}</small></span></label>))}{err.ship && <span className="err">{err.ship}</span>}</div>)}
+              {method === 'delivery' && err.ship && (!opts || opts.mismatch || !opts.options.length) && <span className="err">{err.ship}</span>}
               <div style={{ display: 'flex', gap: 10 }}><button className="btn ghost" onClick={() => setStep(1)}>Back</button><button className="btn" onClick={next}>Continue to payment</button></div>
             </>}
             {step === 3 && <>
