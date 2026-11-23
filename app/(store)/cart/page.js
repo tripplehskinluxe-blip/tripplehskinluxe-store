@@ -72,9 +72,9 @@ export default function CartPage() {
             <button className="btn s">Apply</button>
           </form>
           <div className="r"><span>Subtotal</span><span>{naira(t.subtotal)}</span></div>
-          <div className="r"><span>Delivery</span><span>{t.delivery ? naira(t.delivery) : 'Free'}</span></div>
+          <div className="r"><span>Delivery</span><span>Calculated at checkout</span></div>
           <div className="r" style={{ color: 'var(--ok)' }}><span>Discount{t.discountCode ? ` (${t.discountCode})` : ''}</span><span>{t.discount ? '-' + naira(t.discount) : naira(0)}</span></div>
-          <div className="r tot"><span>Total</span><span>{naira(t.total)}</span></div>
+          <div className="r tot"><span>Total before delivery</span><span>{naira(t.subtotal - t.discount)}</span></div>
           {zone === 'lagos' && (left > 0
             ? <><div className="prog"><i style={{ width: `${Math.min(100, ((t.subtotal - t.discount) / delivery.freeThreshold) * 100)}%` }} /></div><p className="sm mut">Add {naira(left)} more for free Lagos delivery</p></>
             : <p className="sm" style={{ color: 'var(--ok)', marginTop: 10 }}>You&apos;ve unlocked free Lagos delivery</p>)}
