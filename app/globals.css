@@ -657,3 +657,10 @@ body.is-admin .wa{display:none}
 
 /* ---- fonts: served by the store itself (no Google servers) ---- */
 :root{--font-serif:'Fraunces Variable',Georgia,serif;--font-sans:'Figtree Variable',system-ui,sans-serif;--font-classic:'Cormorant Garamond',Georgia,serif}
+
+/* ---- page art and motion ---- */
+.pg-icon{width:64px;height:64px;display:block;margin:0 0 14px}
+.pg-track{position:relative;height:80px;margin-top:16px;overflow:hidden}
+.pg-track img{position:absolute;left:0;top:4px;width:72px;height:72px;animation:pgdrive 7s linear infinite}
+@keyframes pgdrive{from{transform:translateX(-90px)}to{transform:translateX(calc(100vw + 90px))}}
+@media (prefers-reduced-motion: reduce){.pg-track img{animation:none;left:12px}}

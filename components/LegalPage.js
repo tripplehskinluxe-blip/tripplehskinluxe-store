@@ -1,11 +1,12 @@
 import { parseBlocks, fillTokens, tokenValues } from '@/lib/legal.js';
 import { fmtDate } from '@/lib/format.js';
 
-export default function LegalPage({ page, settings }) {
+// Legal page layout. "icon" is the page's artwork, shown above the title.
+export default function LegalPage({ page, settings, icon }) {
   const blocks = parseBlocks(fillTokens(page.body, tokenValues(settings)));
   return (
     <>
-      <div className="ph"><div className="container"><h1>{page.title}</h1>{page.updatedAt && <p>Last updated {fmtDate(page.updatedAt)}</p>}</div></div>
+      <div className="ph"><div className="container">{icon && <img className="pg-icon" src={icon} alt="" />}<h1>{page.title}</h1>{page.updatedAt && <p>Last updated {fmtDate(page.updatedAt)}</p>}</div></div>
       <div className="container legal" style={{ maxWidth: 820, padding: '40px 20px 90px' }}>
         {blocks.map((b, i) => {
           if (b.t === 'h2') return <h2 key={i} style={{ fontSize: 24, margin: '30px 0 10px' }}>{b.text}</h2>;

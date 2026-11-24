@@ -13,5 +13,5 @@ export async function generateMetadata() {
 export default async function Page() {
   const [page, settings] = await Promise.all([getLegalPage('returns'), getSettings()]);
   if (!page) notFound();
-  return <LegalPage page={page} settings={settings} />;
+  return <LegalPage page={page} settings={settings} icon="/icons/returns.png" />;
 }

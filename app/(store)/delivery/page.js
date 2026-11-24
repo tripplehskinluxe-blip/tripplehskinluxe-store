@@ -8,7 +8,7 @@ export default async function Delivery() {
   const { delivery: d } = await getSettings();
   return (
     <>
-      <div className="ph"><div className="container"><h1>Delivery information</h1><p>Fast, tracked delivery across Nigeria.</p></div></div>
+      <div className="ph"><div className="container"><h1>Delivery information</h1><p>Fast, tracked delivery across Nigeria.</p><div className="pg-track"><img src="/icons/delivery.png" alt="" /></div></div></div>
       <div className="container" style={{ maxWidth: 860, padding: '44px 20px 90px' }}>
         <div className="box" style={{ padding: 0, overflow: 'hidden' }}>
           <table className="tbl-f"><tbody>

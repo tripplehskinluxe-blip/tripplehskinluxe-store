@@ -12,7 +12,8 @@ import { useSettings } from '@/components/SettingsProvider';
 
 export default function CartPage() {
   const { delivery } = useSettings();
-  const { setQty, remove, toast, count } = useCart();
+  const { setQty, remove, toast, count, clear } = useCart();
+  const clearBag = () => { if (window.confirm('Clear everything from your bag?')) clear(); };
   const { lines, loading } = useCartLines();
   const [zone, setZone] = useState('lagos');
   const [promo, setPromo] = useState(null);
@@ -47,7 +48,7 @@ export default function CartPage() {
   return (
     <>
       <FestiveBand />
-      <div className="ph"><div className="container"><h1>Shopping bag</h1><p>{count} item{count === 1 ? '' : 's'}</p></div></div>
+      <div className="ph"><div className="container"><img className="pg-icon" src="/icons/bag.png" alt="" /><h1>Shopping bag</h1><p>{count} item{count === 1 ? '' : 's'}</p></div></div>
       <div className="container"><div className="two">
         <div>
           {lines.map(({ p, qty }) => (
@@ -61,7 +62,7 @@ export default function CartPage() {
               </div>
             </div>
           ))}
-          <Link className="lnk" href="/shop" style={{ marginTop: 22 }}>Continue shopping</Link>
+          <div style={{ display: 'flex', gap: 22, alignItems: 'center', marginTop: 22, flexWrap: 'wrap' }}><Link className="lnk" href="/shop">Continue shopping</Link><button className="lnk" onClick={clearBag} style={{ color: 'var(--err)' }}><Icon n="trash" s={14} /> Clear bag</button></div>
         </div>
         <aside className="sum">
           <h3 style={{ marginBottom: 14 }}>Order summary</h3>

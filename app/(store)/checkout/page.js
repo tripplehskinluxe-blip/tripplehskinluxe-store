@@ -126,7 +126,7 @@ export default function Checkout() {
   return (
     <>
       
-      <div className="ph"><div className="container"><h1>Checkout</h1><p>Secure checkout, powered by Paystack</p></div></div>
+      <div className="ph"><div className="container"><h1>Checkout</h1><p>Secure checkout, powered by Paystack</p><div className="pg-track"><img src="/icons/checkout.png" alt="" /></div></div></div>
       <div className="container"><div className="two">
         <div>
           <details className="sum ck-m"><summary style={{ cursor: 'pointer', fontWeight: 600 }}>Order summary · {naira(t.total)} <span className="mut sm">(tap to view)</span></summary><div style={{ marginTop: 14 }}>{summary}</div></details>
@@ -163,9 +163,7 @@ export default function Checkout() {
             {step === 3 && <>
               <FestiveStep kind="payment" />
               <h3 style={{ marginBottom: 18 }}>Payment</h3>
-              <label className="pay"><input type="radio" checked readOnly /><span><b>Pay securely with Paystack</b><small>Card, bank transfer or USSD on Paystack&apos;s secure page. We never see your card details.</small></span></label>
-              <p className="sm mut" style={{ margin: '16px 0', display: 'flex', gap: 6, alignItems: 'center' }}><Icon n="lock" s={14} /> You&apos;ll be redirected to Paystack to complete payment.</p>
-              <p className="sm mut" style={{ margin: '12px 0' }}>By paying you agree to our <Link href="/terms" target="_blank">Terms of Sale</Link> and <Link href="/privacy" target="_blank">Privacy Policy</Link>.</p>
+                            <p className="sm mut" style={{ margin: '12px 0' }}>By paying you agree to our <Link href="/terms" target="_blank">Terms of Sale</Link> and <Link href="/privacy" target="_blank">Privacy Policy</Link>.</p>
               <div style={{ display: 'flex', gap: 10 }}><button className="btn ghost" onClick={() => setStep(2)}>Back</button><button className="btn" onClick={place} disabled={busy}>{busy ? 'Please wait…' : `Pay ${naira(t.total)}`}</button></div>
             </>}
           </div>
